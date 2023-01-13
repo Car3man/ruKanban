@@ -1,0 +1,15 @@
+{
+    "name": "ru-kanban",
+    "version": "0.1.0",
+    "description": "Kanban service",
+    "main": "index.js",
+    "scripts": {
+        "start": "node app.js"
+    },
+    "author": "Arthur Klopov",
+    "type": "module",
+    "dependencies": {
+        "body-parser": "^1.20.1",
+        "express": "^4.18.2"
+    }
+}

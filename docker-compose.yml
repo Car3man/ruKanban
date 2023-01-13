@@ -1,3 +1,21 @@
 version: "3.8"
 
 services:
+  db:
+    build: ./db
+    networks:
+      - net
+  web-server:
+    build: ./web-server
+    ports:
+      - 80:80
+    networks:
+      - net
+  app:
+    build: ./app
+    networks:
+      - net
+
+networks:
+  net:
+    driver: bridge
