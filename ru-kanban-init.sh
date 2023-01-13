@@ -9,3 +9,6 @@ then
 fi
 
 git clone git@github.com:Car3man/ruKanban.git
+
+mkdir volumes
+mkdir volumes/db
