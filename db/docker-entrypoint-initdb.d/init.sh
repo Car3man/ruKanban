@@ -26,7 +26,6 @@ psql -v ON_ERROR_STOP=1 -d $PGDATABASE -U $PGUSERNAME <<-EOSQL
 -- Not affect in docker
 
 DROP TABLE IF EXISTS public.users;
-DROP TABLE IF EXISTS public.access_tokens;
 DROP TABLE IF EXISTS public.refresh_tokens;
 DROP TABLE IF EXISTS public.roles;
 
@@ -46,19 +45,6 @@ CREATE TABLE public.users
     UNIQUE (login)
 );
 ALTER TABLE IF EXISTS public.users
-    OWNER to rukanban_admin;
-
-CREATE TABLE public.access_tokens
-(
-    id BIGSERIAL NOT NULL,
-    token TEXT NOT NULL,
-    user_id BIGINT NOT NULL,
-    created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL,
-    expires_at TIMESTAMP WITHOUT TIME ZONE NOT NULL,
-    PRIMARY KEY (id),
-    UNIQUE (token)
-);
-ALTER TABLE IF EXISTS public.access_tokens
     OWNER to rukanban_admin;
 
 CREATE TABLE public.refresh_tokens
@@ -165,11 +151,6 @@ CREATE TABLE public.user_ticket
 );
 
 -- Relationships
-
-ALTER TABLE public.access_tokens 
-    ADD CONSTRAINT fk_access_tokens_users
-    FOREIGN KEY (user_id) 
-    REFERENCES public.users (id);
 	
 ALTER TABLE public.refresh_tokens 
     ADD CONSTRAINT fk_refresh_tokens_users
