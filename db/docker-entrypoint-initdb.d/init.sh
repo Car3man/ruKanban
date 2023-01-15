@@ -60,6 +60,16 @@ CREATE TABLE public.refresh_tokens
 ALTER TABLE IF EXISTS public.refresh_tokens
     OWNER to rukanban_admin;
 
+CREATE TABLE public.cancelled_tokens
+(
+    id BIGSERIAL NOT NULL,
+    token TEXT NOT NULL,
+    PRIMARY KEY (id),
+    UNIQUE (token)
+);
+ALTER TABLE IF EXISTS public.cancelled_tokens
+    OWNER to rukanban_admin;
+
 CREATE TABLE public.roles
 (
     id BIGSERIAL NOT NULL,
