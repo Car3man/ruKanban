@@ -1,6 +1,6 @@
 const express = require("express")
-const auth = require("./app_routes/auth")
-const throw404 = require("./app_utils/throw404")
+const auth = require("./routes/auth")
+const { sendNotFound } = require("./common/response-helper")
 
 const app = express()
 const port = 80
@@ -9,7 +9,7 @@ app.use(express.urlencoded({ extended: false }))
 app.use(express.json())
 
 app.use("/auth", auth)
-app.all("*", throw404)
+app.all("*", sendNotFound)
 
 const server = app.listen(port, (error) => {
     if (error) {
