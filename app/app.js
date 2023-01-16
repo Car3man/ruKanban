@@ -1,6 +1,6 @@
 const express = require("express")
 const auth = require("./app_routes/auth")
-const throw404 = require("./throw404")
+const throw404 = require("./app_utils/throw404")
 
 const app = express()
 const port = 80

@@ -1,5 +1,5 @@
 const { Router } = require("express")
-const throw404 = require("../throw404")
+const throw404 = require("../app_utils/throw404")
 const { signUp, signIn, signOut, changePassword } = require("./auth-controller")
 
 const router = Router()
