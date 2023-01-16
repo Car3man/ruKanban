@@ -4,10 +4,10 @@ const { signUp, signIn, signOut, changePassword } = require("./auth-controller")
 
 const router = Router()
 
-router.post("/signUp", signUp)
-router.post("/signIn", signIn)
-router.post("/signOut", signOut)
-router.post("/changePassword", changePassword)
+router.get("/signUp", signUp)
+router.get("/signIn", signIn)
+router.get("/signOut", signOut)
+router.get("/changePassword", changePassword)
 router.all("*", throw404)
 
 module.exports = router
