@@ -60,14 +60,15 @@ CREATE TABLE public.refresh_tokens
 ALTER TABLE IF EXISTS public.refresh_tokens
     OWNER to rukanban_admin;
 
-CREATE TABLE public.cancelled_tokens
+CREATE TABLE public.revoked_tokens
 (
     id BIGSERIAL NOT NULL,
     token TEXT NOT NULL,
+    revoked_at TIMESTAMP WITHOUT TIME ZONE NOT NULL,
     PRIMARY KEY (id),
     UNIQUE (token)
 );
-ALTER TABLE IF EXISTS public.cancelled_tokens
+ALTER TABLE IF EXISTS public.revoked_tokens
     OWNER to rukanban_admin;
 
 CREATE TABLE public.roles
