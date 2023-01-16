@@ -17,6 +17,8 @@ services:
       - net
   app:
     build: ./app
+    volumes:
+      - ./app:/app
     networks:
       - net
 
