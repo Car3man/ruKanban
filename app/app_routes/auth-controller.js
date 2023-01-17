@@ -2,7 +2,6 @@ const { PrismaClient } = require("@prisma/client")
 const md5 = require("md5")
 const authHelper = require("../common/auth-helper")
 const responseHelper = require("../common/response-helper")
-const utils = require("../common/utils")
 
 const prisma = new PrismaClient()
 const getRefreshTokenExpiresAt = () => Date.now() + (1000 * 60 * 60 * 24 * 30 * 3)
@@ -127,12 +126,78 @@ const signIn = async (req, res) => {
     })
 };
 
-const signOut = (req, res) => {
-    res.status(200).send("signOut")
+const signOut = async (req, res) => {
+    const accessToken = req.accessToken
+
+    try {
+        await prisma.revoked_tokens.create({
+            data: {
+                token: accessToken,
+                revoked_at: new Date()
+            }
+        })
+    } catch (err) {
+        console.log(err)
+        return responseHelper.sendInternalServerError(req, res)
+    }
+
+    return responseHelper.sendOk(req, res)
 };
 
-const changePassword = (req, res) => {
-    res.status(200).send("changePassword")
+const changePassword = async (req, res) => {
+    const login = req.login
+    const accessToken = req.accessToken
+    const currentPassword = req.body.currentPassword
+    const newPassword = req.body.newPassword
+
+    let userData;
+
+    try {
+        userData = await prisma.users.findFirst({
+            where: { login: login }
+        })
+
+        if (!userData) {
+            return responseHelper.sendInternalServerError(req, res)
+        }
+    } catch (err) {
+        console.log(err)
+        return responseHelper.sendInternalServerError(req, res)
+    }
+
+    if (userData.password_hash !== md5(currentPassword)) {
+        return responseHelper.sendBadRequest(req, res, {
+            extended_msg: "Current password doesn't match actual."
+        })
+    }
+
+    try {
+        await prisma.users.update({
+            where: {
+                login: login
+            },
+            data: {
+                password_hash: md5(newPassword)
+            }
+        })
+    } catch (err) {
+        console.log(err)
+        return responseHelper.sendInternalServerError(req, res)
+    }
+
+    try {
+        await prisma.revoked_tokens.create({
+            data: {
+                token: accessToken,
+                revoked_at: new Date()
+            }
+        })
+    } catch (err) {
+        console.log(err)
+        return responseHelper.sendInternalServerError(req, res)
+    }
+
+    return responseHelper.sendOk(req, res)
 };
 
 module.exports = { signUp, signIn, signOut, changePassword }
