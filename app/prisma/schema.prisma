@@ -1,0 +1,117 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-1.1.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model boards {
+  id           BigInt      @id @default(autoincrement())
+  workspace_id BigInt
+  name         String      @db.VarChar(36)
+  description  String      @db.VarChar(36)
+  created_at   DateTime    @db.Timestamp(6)
+  workspaces   workspaces  @relation(fields: [workspace_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_boards_workspaces")
+  columns      columns[]
+  user_board   user_board?
+}
+
+model cancelled_tokens {
+  id    BigInt @id @default(autoincrement())
+  token String @unique
+}
+
+model columns {
+  id         BigInt    @id @default(autoincrement())
+  board_id   BigInt
+  index      Int       @unique
+  name       String    @db.VarChar(36)
+  created_at DateTime  @db.Timestamp(6)
+  boards     boards    @relation(fields: [board_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_columns_boards")
+  tickets    tickets[]
+}
+
+model refresh_tokens {
+  id         BigInt   @id @default(autoincrement())
+  token      String   @unique
+  user_id    BigInt
+  created_at DateTime @db.Timestamp(6)
+  expires_at DateTime @db.Timestamp(6)
+  users      users    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_refresh_tokens_users")
+}
+
+model roles {
+  id    BigInt  @id @default(autoincrement())
+  name  String  @unique @db.VarChar(36)
+  users users[]
+}
+
+model tickets {
+  id          BigInt       @id @default(autoincrement())
+  columnd_id  BigInt
+  index       Int          @unique
+  title       String       @db.VarChar(128)
+  description String       @db.VarChar(2048)
+  created_at  DateTime     @db.Timestamp(6)
+  columns     columns      @relation(fields: [columnd_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_tickets_columns")
+  user_ticket user_ticket?
+}
+
+model user_board {
+  id       BigInt @id @default(autoincrement())
+  user_id  BigInt @unique
+  board_id BigInt @unique
+  boards   boards @relation(fields: [board_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_board_boards")
+  users    users  @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_board_users")
+}
+
+model user_ticket {
+  id        BigInt  @id @default(autoincrement())
+  user_id   BigInt  @unique
+  ticket_id BigInt  @unique
+  tickets   tickets @relation(fields: [ticket_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_ticket_tickets")
+  users     users   @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_ticket_users")
+}
+
+model user_workspace {
+  id                BigInt          @id @default(autoincrement())
+  user_id           BigInt          @unique
+  workspace_id      BigInt          @unique
+  workspace_role_id BigInt
+  users             users           @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_workspace_users")
+  workspaces        workspaces      @relation(fields: [workspace_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_workspace_workspaces")
+  workspace_roles   workspace_roles @relation(fields: [workspace_role_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_workspaces_workspace_roles")
+}
+
+model users {
+  id             BigInt           @id @default(autoincrement())
+  login          String           @unique @db.VarChar(36)
+  password_hash  String           @db.VarChar(32)
+  first_name     String           @db.VarChar(36)
+  sur_name       String           @db.VarChar(36)
+  patronymic     String           @db.VarChar(36)
+  role_id        BigInt
+  created_at     DateTime         @db.Timestamp(6)
+  refresh_tokens refresh_tokens[]
+  user_board     user_board?
+  user_ticket    user_ticket?
+  user_workspace user_workspace?
+  roles          roles            @relation(fields: [role_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_users_roles")
+}
+
+model workspace_roles {
+  id             BigInt           @id @default(autoincrement())
+  name           String           @unique @db.VarChar(36)
+  user_workspace user_workspace[]
+}
+
+model workspaces {
+  id             BigInt          @id @default(autoincrement())
+  name           String          @db.VarChar(36)
+  created_at     DateTime        @db.Timestamp(6)
+  boards         boards[]
+  user_workspace user_workspace?
+}
