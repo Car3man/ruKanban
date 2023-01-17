@@ -1,7 +1,7 @@
 const httpCodes = require("./http-codes")
 
 module.exports.sendOk = (req, res, data) => {
-    res.status(httpCodes.ok).send(data)
+    res.status(httpCodes.ok).send(data || "OK")
 }
 
 module.exports.sendBadRequest = (req, res, data) => {
