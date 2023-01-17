@@ -222,5 +222,13 @@ ALTER TABLE public.user_ticket
     ADD CONSTRAINT fk_user_ticket_tickets
     FOREIGN KEY (ticket_id)
     REFERENCES public.tickets (id);
-    
+
+-- Init data
+
+INSERT INTO public.roles (name) VALUES ('root');
+INSERT INTO public.roles (name) VALUES ('user');
+
+INSERT INTO public.workspace_roles (name) VALUES ('owner');
+INSERT INTO public.workspace_roles (name) VALUES ('user');
+
 EOSQL
