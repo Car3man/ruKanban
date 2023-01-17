@@ -1,40 +1,74 @@
 const jwt = require("jsonwebtoken")
+const { PrismaClient } = require("@prisma/client")
 const responseHelper = require("../common/response-helper")
 
-module.exports.unauthorizedRequiredMiddleware = (req, res, next) => {
+const prisma = new PrismaClient()
+
+const getAuthorizationStatus = async (req) => {
     const authorizationHeader = req.headers.authorization
 
-    if (authorizationHeader) {
+    if (!authorizationHeader) {
+        return { isAuthorized: false }
+    }
+
+    const token = authorizationHeader.split(' ')[1]
+    const jwtVerifyPromise = new Promise((resolve, reject) => {
+        jwt.verify(token, process.env.JWT_SECRET, async (verifyErr, { login }) => {
+            if (verifyErr) {
+                console.log(verifyErr)
+                return reject(verifyErr)
+            }
+
+            try {
+                const isRevoked = await prisma.revoked_tokens.count({
+                    where: { token: token }
+                }) > 0
+                return resolve({ isAuthorized: !isRevoked, login: login })
+            } catch (isRevokeErr) {
+                console.log(isRevokeErr)
+                return { isAuthorized: false }
+            }
+
+        })
+    })
+
+    try {
+        const jwtVerifyResult = await jwtVerifyPromise
+        return { ...jwtVerifyResult, accessToken: token }
+    } catch {
+        return { isAuthorized: false }
+    }
+}
+
+module.exports.unauthorizationRequireMiddleware = async (req, res, next) => {
+    const status = await getAuthorizationStatus(req)
+
+    if (status.isAuthorized) {
         return responseHelper.sendBadRequest(req, res, {
             extended_msg: `Sign out before use ${req.path} method`
         })
     }
+
     next()
 }
 
-module.exports.authenticateMiddleware = (req, res, next) => {
-    const authorizationHeader = req.headers.authorization
+module.exports.authorizationRequireMiddleware = async (req, res, next) => {
+    const status = await getAuthorizationStatus(req)
 
-    if (authorizationHeader) {
-        const token = authorizationHeader.split(' ')[1]
-
-        jwt.verify(token, process.env.JWT_SECRET, (err, { login }) => {
-            if (err) {
-                return responseHelper.sendForbidden(req, res)
-            }
-
-            req.login = login
-            next()
-        });
+    if (!status.isAuthorized) {
+        return responseHelper.sendUnauthorized(req, res)
     }
-    return responseHelper.sendUnauthorized(req, res)
+
+    req.login = status.login
+    req.accessToken = status.accessToken
+    next()
 }
 
 module.exports.createAccessToken = (login) => {
     return jwt.sign({
         iss: process.env.JWT_ISSUER,
         aud: process.env.JWT_AUDIENCE,
-        exp: 1000 + (1000 * 60 * 60 * 5),
+        exp: Date.now() + (1000 * 60 * 60 * 5),
         alg: "HS256",
         login: login
     }, process.env.JWT_SECRET);
