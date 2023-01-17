@@ -19,11 +19,6 @@ model boards {
   user_board   user_board?
 }
 
-model cancelled_tokens {
-  id    BigInt @id @default(autoincrement())
-  token String @unique
-}
-
 model columns {
   id         BigInt    @id @default(autoincrement())
   board_id   BigInt
@@ -114,4 +109,10 @@ model workspaces {
   created_at     DateTime        @db.Timestamp(6)
   boards         boards[]
   user_workspace user_workspace?
+}
+
+model revoked_tokens {
+  id         BigInt   @id @default(autoincrement())
+  token      String   @unique
+  revoked_at DateTime @db.Timestamp(6)
 }
