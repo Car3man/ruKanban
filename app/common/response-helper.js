@@ -20,6 +20,6 @@ module.exports.sendNotFound = (req, res, data) => {
     res.status(httpCodes.notFound).send(data || "The requested resource doesn't exist.")
 }
 
-module.exports.internalServerError = (req, res, data) => {
+module.exports.sendInternalServerError = (req, res, data) => {
     res.status(httpCodes.internalServerError).send(data || "Internal server error, we are working on the problem.")
 }
