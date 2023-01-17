@@ -1,5 +1,5 @@
 const express = require("express")
-const auth = require("./routes/auth")
+const auth = require("./app_routes/auth")
 const { sendNotFound } = require("./common/response-helper")
 require('dotenv').config()
 
