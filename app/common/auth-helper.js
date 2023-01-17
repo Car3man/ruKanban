@@ -64,11 +64,12 @@ module.exports.authorizationRequireMiddleware = async (req, res, next) => {
   return next();
 };
 
-module.exports.createAccessToken = (login) => jwt.sign({
+module.exports.createAccessToken = (userId, login) => jwt.sign({
   iss: process.env.JWT_ISSUER,
   aud: process.env.JWT_AUDIENCE,
   exp: Date.now() + (1000 * 60 * 60 * 5),
   alg: 'HS256',
+  userId: userId.toString(),
   login,
 }, process.env.JWT_SECRET);
 
@@ -79,3 +80,26 @@ module.exports.createRefreshToken = (accessToken, expiresAt) => jwt.sign({
   alg: 'HS256',
   accessToken,
 }, process.env.JWT_SECRET);
+
+module.exports.revokeUserTokens = async (accessToken) => {
+  const { userId } = jwt.decode(accessToken);
+
+  const refreshToken = (await prisma.refresh_tokens.findFirst({
+    where: {
+      user_id: BigInt(userId),
+    },
+    select: {
+      token: true,
+    },
+  })).token;
+
+  console.log(accessToken);
+  console.log(refreshToken);
+
+  await prisma.revoked_tokens.createMany({
+    data: [
+      { token: accessToken, revoked_at: new Date() },
+      { token: refreshToken, revoked_at: new Date() },
+    ],
+  });
+};

@@ -41,14 +41,17 @@ const signUp = async (req, res) => {
     created_at: new Date(),
   };
 
+  let userId;
   try {
-    await prisma.users.create({ data: userData });
+    userId = (await prisma.users.create({
+      data: userData,
+    })).id;
   } catch (err) {
     console.log(err);
     return responseHelper.sendInternalServerError(req, res);
   }
 
-  const accessToken = authHelper.createAccessToken(login);
+  const accessToken = authHelper.createAccessToken(userId, login);
   const refreshTokenExpiresAt = getRefreshTokenExpiresAt();
   const refreshToken = authHelper.createRefreshToken(accessToken, refreshTokenExpiresAt);
 
@@ -101,21 +104,12 @@ const signIn = async (req, res) => {
     });
   }
 
-  const accessToken = authHelper.createAccessToken(login);
+  const accessToken = authHelper.createAccessToken(userData.id, login);
   const refreshTokenExpiresAt = getRefreshTokenExpiresAt();
   const refreshToken = authHelper.createRefreshToken(accessToken, refreshTokenExpiresAt);
 
   try {
-    await prisma.refresh_tokens.create({
-      data: {
-        token: refreshToken,
-        users: {
-          connect: { login },
-        },
-        created_at: new Date(),
-        expires_at: new Date(refreshTokenExpiresAt),
-      },
-    });
+    await authHelper.revokeUserTokens(accessToken);
   } catch (err) {
     console.log(err);
     return responseHelper.sendInternalServerError(req, res);
@@ -131,12 +125,7 @@ const signOut = async (req, res) => {
   const { accessToken } = req;
 
   try {
-    await prisma.revoked_tokens.create({
-      data: {
-        token: accessToken,
-        revoked_at: new Date(),
-      },
-    });
+    await authHelper.revokeUserTokens(accessToken);
   } catch (err) {
     console.log(err);
     return responseHelper.sendInternalServerError(req, res);
@@ -201,6 +190,10 @@ const changePassword = async (req, res) => {
   return responseHelper.sendOk(req, res);
 };
 
+const refreshToken = async (req, res) => {
+
+};
+
 module.exports = {
-  signUp, signIn, signOut, changePassword,
+  signUp, signIn, signOut, changePassword, refreshToken,
 };
