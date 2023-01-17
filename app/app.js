@@ -1,6 +1,7 @@
 const express = require("express")
 const auth = require("./routes/auth")
 const { sendNotFound } = require("./common/response-helper")
+require('dotenv').config()
 
 const app = express()
 const port = 80
