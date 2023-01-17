@@ -49,7 +49,6 @@ const signUp = async (req, res) => {
     }
 
     const accessToken = authHelper.createAccessToken(login)
-
     const refreshTokenExpiresAt = getRefreshTokenExpiresAt()
     const refreshToken = authHelper.createRefreshToken(accessToken, refreshTokenExpiresAt)
 
@@ -75,8 +74,57 @@ const signUp = async (req, res) => {
     })
 };
 
-const signIn = (req, res) => {
-    res.status(200).send("signIn")
+const signIn = async (req, res) => {
+    const login = req.body.login
+    const password = req.body.password
+
+    let userData;
+
+    try {
+        userData = await prisma.users.findFirst({
+            where: { login: login }
+        })
+
+        if (!userData) {
+            return responseHelper.sendBadRequest(req, res, {
+                extended_msg: "The login or password is wrong."
+            })
+        }
+    } catch (err) {
+        console.log(err)
+        return responseHelper.sendInternalServerError(req, res)
+    }
+
+    if (userData.password_hash !== md5(password)) {
+        return responseHelper.sendBadRequest(req, res, {
+            extended_msg: "The login or password is wrong."
+        })
+    }
+
+    const accessToken = authHelper.createAccessToken(login)
+    const refreshTokenExpiresAt = getRefreshTokenExpiresAt()
+    const refreshToken = authHelper.createRefreshToken(accessToken, refreshTokenExpiresAt)
+
+    try {
+        await prisma.refresh_tokens.create({
+            data: {
+                token: refreshToken,
+                users: {
+                    connect: { login: login }
+                },
+                created_at: new Date(),
+                expires_at: new Date(refreshTokenExpiresAt)
+            }
+        })
+    } catch (err) {
+        console.log(err)
+        return responseHelper.sendInternalServerError(req, res)
+    }
+
+    res.status(200).send({
+        accessToken: accessToken,
+        refreshToken: refreshToken
+    })
 };
 
 const signOut = (req, res) => {
