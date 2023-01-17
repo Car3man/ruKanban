@@ -1,85 +1,81 @@
-const jwt = require("jsonwebtoken")
-const { PrismaClient } = require("@prisma/client")
-const responseHelper = require("../common/response-helper")
+const jwt = require('jsonwebtoken');
+const { PrismaClient } = require('@prisma/client');
+const responseHelper = require('./response-helper');
 
-const prisma = new PrismaClient()
+const prisma = new PrismaClient();
 
 const getAuthorizationStatus = async (req) => {
-    const authorizationHeader = req.headers.authorization
+  const authorizationHeader = req.headers.authorization;
 
-    if (!authorizationHeader) {
-        return { isAuthorized: false }
-    }
+  if (!authorizationHeader) {
+    return { isAuthorized: false };
+  }
 
-    const token = authorizationHeader.split(' ')[1]
-    const jwtVerifyPromise = new Promise((resolve, reject) => {
-        jwt.verify(token, process.env.JWT_SECRET, async (verifyErr, { login }) => {
-            if (verifyErr) {
-                console.log(verifyErr)
-                return reject(verifyErr)
-            }
+  const token = authorizationHeader.split(' ')[1];
+  const jwtVerifyPromise = new Promise((resolve, reject) => {
+    jwt.verify(token, process.env.JWT_SECRET, async (verifyErr, { login }) => {
+      if (verifyErr) {
+        console.log(verifyErr);
+        return reject(verifyErr);
+      }
 
-            try {
-                const isRevoked = await prisma.revoked_tokens.count({
-                    where: { token: token }
-                }) > 0
-                return resolve({ isAuthorized: !isRevoked, login: login })
-            } catch (isRevokeErr) {
-                console.log(isRevokeErr)
-                return { isAuthorized: false }
-            }
+      try {
+        const isRevoked = await prisma.revoked_tokens.count({
+          where: { token },
+        }) > 0;
+        return resolve({ isAuthorized: !isRevoked, login });
+      } catch (isRevokeErr) {
+        console.log(isRevokeErr);
+        return { isAuthorized: false };
+      }
+    });
+  });
 
-        })
-    })
-
-    try {
-        const jwtVerifyResult = await jwtVerifyPromise
-        return { ...jwtVerifyResult, accessToken: token }
-    } catch {
-        return { isAuthorized: false }
-    }
-}
+  try {
+    const jwtVerifyResult = await jwtVerifyPromise;
+    return { ...jwtVerifyResult, accessToken: token };
+  } catch {
+    return { isAuthorized: false };
+  }
+};
 
 module.exports.unauthorizationRequireMiddleware = async (req, res, next) => {
-    const status = await getAuthorizationStatus(req)
+  const status = await getAuthorizationStatus(req);
 
-    if (status.isAuthorized) {
-        return responseHelper.sendBadRequest(req, res, {
-            extended_msg: `Sign out before use ${req.path} method`
-        })
-    }
+  if (status.isAuthorized) {
+    return responseHelper.sendBadRequest(req, res, {
+      extended_msg: `Sign out before use ${req.path} method`,
+    });
+  }
 
-    next()
-}
+  return next();
+};
 
 module.exports.authorizationRequireMiddleware = async (req, res, next) => {
-    const status = await getAuthorizationStatus(req)
+  const status = await getAuthorizationStatus(req);
 
-    if (!status.isAuthorized) {
-        return responseHelper.sendUnauthorized(req, res)
-    }
+  if (!status.isAuthorized) {
+    return responseHelper.sendUnauthorized(req, res);
+  }
 
-    req.login = status.login
-    req.accessToken = status.accessToken
-    next()
-}
+  req.login = status.login;
+  req.accessToken = status.accessToken;
 
-module.exports.createAccessToken = (login) => {
-    return jwt.sign({
-        iss: process.env.JWT_ISSUER,
-        aud: process.env.JWT_AUDIENCE,
-        exp: Date.now() + (1000 * 60 * 60 * 5),
-        alg: "HS256",
-        login: login
-    }, process.env.JWT_SECRET);
-}
+  return next();
+};
 
-module.exports.createRefreshToken = (accessToken, expiresAt) => {
-    return jwt.sign({
-        iss: process.env.JWT_ISSUER,
-        aud: process.env.JWT_AUDIENCE,
-        exp: expiresAt,
-        alg: "HS256",
-        accessToken: accessToken
-    }, process.env.JWT_SECRET);
-}
+module.exports.createAccessToken = (login) => jwt.sign({
+  iss: process.env.JWT_ISSUER,
+  aud: process.env.JWT_AUDIENCE,
+  exp: Date.now() + (1000 * 60 * 60 * 5),
+  alg: 'HS256',
+  login,
+}, process.env.JWT_SECRET);
+
+module.exports.createRefreshToken = (accessToken, expiresAt) => jwt.sign({
+  iss: process.env.JWT_ISSUER,
+  aud: process.env.JWT_AUDIENCE,
+  exp: expiresAt,
+  alg: 'HS256',
+  accessToken,
+}, process.env.JWT_SECRET);
