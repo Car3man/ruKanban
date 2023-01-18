@@ -1,7 +1,7 @@
 const { PrismaClient } = require('@prisma/client');
 const md5 = require('md5');
-const authHelper = require('../../common/auth-helper');
-const responseHelper = require('../../common/response-helper');
+const authHelper = require('../../../common/auth-helper');
+const responseHelper = require('../../../common/response-helper');
 
 const prisma = new PrismaClient();
 

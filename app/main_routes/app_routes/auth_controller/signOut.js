@@ -1,5 +1,5 @@
-const authHelper = require('../../common/auth-helper');
-const responseHelper = require('../../common/response-helper');
+const authHelper = require('../../../common/auth-helper');
+const responseHelper = require('../../../common/response-helper');
 
 /**
  * Sign out business logic (safety)

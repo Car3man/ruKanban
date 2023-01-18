@@ -1,5 +1,6 @@
 const express = require('express');
-const auth = require('./app_routes/auth');
+const auth = require('./main_routes/app_routes/auth');
+const workspace = require('./main_routes/workspace_routes/workspace');
 const { sendNotFound } = require('./common/response-helper');
 require('dotenv').config();
 
@@ -10,6 +11,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
 app.use('/auth', auth);
+app.use('/workspace', workspace);
 app.all('*', sendNotFound);
 
 const server = app.listen(port, (error) => {

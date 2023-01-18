@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
-const authHelper = require('../../common/auth-helper');
-const responseHelper = require('../../common/response-helper');
+const authHelper = require('../../../common/auth-helper');
+const responseHelper = require('../../../common/response-helper');
 
 /**
  * Refresh token business logic

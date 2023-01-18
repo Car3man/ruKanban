@@ -1,9 +1,9 @@
 const { Router } = require('express');
-const { sendNotFound } = require('../common/response-helper');
+const { sendNotFound } = require('../../common/response-helper');
 const {
   authorizationRequireAsync,
   unauthorizationRequireAsync,
-} = require('../common/auth-helper');
+} = require('../../common/auth-helper');
 const {
   signUp, signIn, signOut, changePassword, refreshTokens,
 } = require('./auth-controller');
