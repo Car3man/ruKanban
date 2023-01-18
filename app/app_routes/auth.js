@@ -1,20 +1,20 @@
 const { Router } = require('express');
 const { sendNotFound } = require('../common/response-helper');
 const {
-  authorizationRequireMiddleware,
-  unauthorizationRequireMiddleware,
+  authorizationRequireAsync,
+  unauthorizationRequireAsync,
 } = require('../common/auth-helper');
 const {
-  signUp, signIn, signOut, changePassword, refreshToken,
+  signUp, signIn, signOut, changePassword, refreshTokens,
 } = require('./auth-controller');
 
 const router = Router();
 
-router.post('/signUp', unauthorizationRequireMiddleware, signUp);
-router.post('/signIn', unauthorizationRequireMiddleware, signIn);
-router.post('/signOut', authorizationRequireMiddleware, signOut);
-router.post('/changePassword', authorizationRequireMiddleware, changePassword);
-router.post('/refreshToken', authorizationRequireMiddleware, refreshToken);
+router.post('/signUp', unauthorizationRequireAsync, signUp);
+router.post('/signIn', unauthorizationRequireAsync, signIn);
+router.post('/signOut', authorizationRequireAsync, signOut);
+router.post('/changePassword', authorizationRequireAsync, changePassword);
+router.post('/refreshTokens', refreshTokens);
 router.all('*', sendNotFound);
 
 module.exports = router;

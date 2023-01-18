@@ -1,20 +1,24 @@
+const util = require('util');
 const { PrismaClient } = require('@prisma/client');
 const md5 = require('md5');
+const jwt = require('jsonwebtoken');
 const authHelper = require('../common/auth-helper');
 const responseHelper = require('../common/response-helper');
 
+const { JsonWebTokenError } = jwt;
 const prisma = new PrismaClient();
 
-const getRefreshTokenExpiresAt = () => Date.now() + (1000 * 60 * 60 * 24 * 30 * 3);
-
+/**
+ * Sign up business logic (safety)
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ */
 const signUp = async (req, res) => {
-  const { login } = req.body;
-  const { password } = req.body;
-  const firstName = req.body.first_name;
-  const surName = req.body.sur_name;
-  const { patronymic } = req.body;
-
   try {
+    const {
+      login, password, firstName, surName, patronymic,
+    } = req.body;
+
     const isUserExist = await prisma.users.count({
       where: { login },
     }) > 0;
@@ -24,67 +28,45 @@ const signUp = async (req, res) => {
         extended_msg: 'The user with same login exist.',
       });
     }
-  } catch (err) {
-    console.log(err);
-    return responseHelper.sendInternalServerError(req, res);
-  }
 
-  const userData = {
-    login,
-    password_hash: md5(password),
-    first_name: firstName,
-    sur_name: surName,
-    patronymic,
-    roles: {
-      connect: { name: 'user' },
-    },
-    created_at: new Date(),
-  };
-
-  let userId;
-  try {
-    userId = (await prisma.users.create({
-      data: userData,
-    })).id;
-  } catch (err) {
-    console.log(err);
-    return responseHelper.sendInternalServerError(req, res);
-  }
-
-  const accessToken = authHelper.createAccessToken(userId, login);
-  const refreshTokenExpiresAt = getRefreshTokenExpiresAt();
-  const refreshToken = authHelper.createRefreshToken(accessToken, refreshTokenExpiresAt);
-
-  try {
-    await prisma.refresh_tokens.create({
-      data: {
-        token: refreshToken,
-        users: {
-          connect: { login },
-        },
-        created_at: new Date(),
-        expires_at: new Date(refreshTokenExpiresAt),
+    const userDataToCreate = {
+      login,
+      password_hash: md5(password),
+      first_name: firstName,
+      sur_name: surName,
+      patronymic,
+      roles: {
+        connect: { name: 'user' },
       },
+      created_at: new Date(),
+    };
+
+    const userId = (await prisma.users.create({
+      data: userDataToCreate,
+    })).id;
+
+    const { accessToken, refreshToken } = await authHelper.createPairOfTokensAsync(userId, login);
+
+    return responseHelper.sendOk(req, res, {
+      accessToken,
+      refreshToken,
     });
   } catch (err) {
-    console.log(err);
+    console.error(err);
     return responseHelper.sendInternalServerError(req, res);
   }
-
-  return res.status(200).send({
-    accessToken,
-    refreshToken,
-  });
 };
 
+/**
+ * Sign in business logic (safety)
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ */
 const signIn = async (req, res) => {
-  const { login } = req.body;
-  const { password } = req.body;
-
-  let userData;
-
   try {
-    userData = await prisma.users.findFirst({
+    const { login, password } = req.body;
+
+    const userData = await prisma.users.findFirst({
       where: { login },
     });
 
@@ -93,75 +75,57 @@ const signIn = async (req, res) => {
         extended_msg: 'The login or password is wrong.',
       });
     }
+
+    if (userData.password_hash !== md5(password)) {
+      return responseHelper.sendBadRequest(req, res, {
+        extended_msg: 'The login or password is wrong.',
+      });
+    }
+
+    const pairOfTokens = await authHelper.createPairOfTokensAsync(userData.id, login);
+    return responseHelper.sendOk(req, res, pairOfTokens);
   } catch (err) {
-    console.log(err);
+    console.error(err);
     return responseHelper.sendInternalServerError(req, res);
   }
-
-  if (userData.password_hash !== md5(password)) {
-    return responseHelper.sendBadRequest(req, res, {
-      extended_msg: 'The login or password is wrong.',
-    });
-  }
-
-  const accessToken = authHelper.createAccessToken(userData.id, login);
-  const refreshTokenExpiresAt = getRefreshTokenExpiresAt();
-  const refreshToken = authHelper.createRefreshToken(accessToken, refreshTokenExpiresAt);
-
-  try {
-    await authHelper.revokeUserTokens(accessToken);
-  } catch (err) {
-    console.log(err);
-    return responseHelper.sendInternalServerError(req, res);
-  }
-
-  return res.status(200).send({
-    accessToken,
-    refreshToken,
-  });
 };
 
+/**
+ * Sign out business logic (safety)
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ */
 const signOut = async (req, res) => {
-  const { accessToken } = req;
-
   try {
-    await authHelper.revokeUserTokens(accessToken);
+    const { accessToken } = req;
+    await authHelper.revokeUserTokensAsync(accessToken);
+    return responseHelper.sendOk(req, res);
   } catch (err) {
-    console.log(err);
+    console.error(err);
     return responseHelper.sendInternalServerError(req, res);
   }
-
-  return responseHelper.sendOk(req, res);
 };
 
+/**
+ * Change password business logic
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ */
 const changePassword = async (req, res) => {
-  const { login } = req;
-  const { accessToken } = req;
-  const { currentPassword } = req.body;
-  const { newPassword } = req.body;
-
-  let userData;
-
   try {
-    userData = await prisma.users.findFirst({
+    const { login, accessToken } = req;
+    const { currentPassword, newPassword } = req.body;
+
+    const userData = await prisma.users.findFirstOrThrow({
       where: { login },
     });
 
-    if (!userData) {
-      return responseHelper.sendInternalServerError(req, res);
+    if (userData.password_hash !== md5(currentPassword)) {
+      return responseHelper.sendBadRequest(req, res, {
+        extended_msg: 'Provided \'currentPassword\' doesn\'t match actual.',
+      });
     }
-  } catch (err) {
-    console.log(err);
-    return responseHelper.sendInternalServerError(req, res);
-  }
 
-  if (userData.password_hash !== md5(currentPassword)) {
-    return responseHelper.sendBadRequest(req, res, {
-      extended_msg: 'Current password doesn\'t match actual.',
-    });
-  }
-
-  try {
     await prisma.users.update({
       where: {
         login,
@@ -170,30 +134,61 @@ const changePassword = async (req, res) => {
         password_hash: md5(newPassword),
       },
     });
+
+    await authHelper.revokeUserTokensAsync(accessToken);
+
+    return responseHelper.sendOk(req, res);
   } catch (err) {
-    console.log(err);
+    console.error(err);
     return responseHelper.sendInternalServerError(req, res);
   }
+};
 
+/**
+ * Refresh token business logic
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ */
+const refreshTokens = async (req, res) => {
   try {
-    await prisma.revoked_tokens.create({
-      data: {
-        token: accessToken,
-        revoked_at: new Date(),
-      },
+    const { userId, login } = req;
+    const currentAccessToken = req.accessToken;
+    const currentRefreshToken = req.body.refreshToken;
+
+    let decodedRefreshToken;
+    try {
+      const jwtVerify = util.promisify(jwt.verify);
+      decodedRefreshToken = await jwtVerify(currentRefreshToken, process.env.JWT_SECRET);
+    } catch (err) {
+      if (err instanceof JsonWebTokenError) {
+        return responseHelper.sendBadRequest(req, res, {
+          extended_msg: 'Invalid refresh token',
+        });
+      }
+      throw err;
+    }
+
+    const accessTokenFromRefreshToken = decodedRefreshToken.accessToken;
+    if (accessTokenFromRefreshToken !== currentAccessToken) {
+      return responseHelper.sendBadRequest(req, res, {
+        extended_msg: 'Invalid pair access-refresh tokens',
+      });
+    }
+
+    const { accessToken, refreshToken } = await authHelper.createPairOfTokensAsync(userId, login);
+
+    return responseHelper.sendOk(req, res, {
+      accessToken,
+      refreshToken,
     });
   } catch (err) {
-    console.log(err);
+    console.error(err);
     return responseHelper.sendInternalServerError(req, res);
   }
-
-  return responseHelper.sendOk(req, res);
 };
 
-const refreshToken = async (req, res) => {
-
-};
-
-module.exports = {
-  signUp, signIn, signOut, changePassword, refreshToken,
-};
+module.exports.signUp = signUp;
+module.exports.signIn = signIn;
+module.exports.signOut = signOut;
+module.exports.changePassword = changePassword;
+module.exports.refreshTokens = refreshTokens;

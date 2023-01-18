@@ -1,3 +1,8 @@
+/**
+ * Transforms BigInt object properties into String
+ * @param {Object} object
+ * @returns {Object}
+ */
 module.exports.escapeBigInt = (object) => {
   const escapedObject = object;
   Object.keys(object).forEach((key) => {

@@ -1,87 +1,139 @@
+const util = require('util');
 const jwt = require('jsonwebtoken');
 const { PrismaClient } = require('@prisma/client');
+const { JsonWebTokenError } = require('jsonwebtoken');
 const responseHelper = require('./response-helper');
 
 const prisma = new PrismaClient();
 
-const getAuthorizationStatus = async (req) => {
+/**
+ * Returns date when access token will expire, using current date time
+ * @returns {Date}
+ */
+const getAccessTokenExpiresAt = () => new Date(Date.now() + (1000 * 60 * 5));
+
+/**
+ * Returns date when refresh token will expire, using current date time
+ * @returns {Date}
+ */
+const getRefreshTokenExpiresAt = () => new Date(Date.now() + (1000 * 60 * 60 * 24 * 30 * 3));
+
+/**
+ * @param {import('express').Request} req
+ * @returns {String}
+ */
+const getAccessTokenFromHeader = (req) => {
   const authorizationHeader = req.headers.authorization;
 
   if (!authorizationHeader) {
+    return null;
+  }
+
+  const authorizationHeaderParts = authorizationHeader.split(' ');
+  const accessToken = authorizationHeaderParts.length > 1 ? authorizationHeaderParts[1] : null;
+  return accessToken;
+};
+
+/**
+ * @param {import('express').Request} req
+ * @typedef {Object} AuthorizationState
+ * @property {Boolean} isAuthorized
+ * @property {String|Undefined} userId
+ * @property {String|Undefined} login
+ * @property {String|Undefined} accessToken
+ * @returns {AuthorizationState}
+ */
+const getAuthorizationStateAsync = async (req) => {
+  const accessToken = getAccessTokenFromHeader(req);
+
+  if (!accessToken) {
     return { isAuthorized: false };
   }
 
-  const token = authorizationHeader.split(' ')[1];
-  const jwtVerifyPromise = new Promise((resolve, reject) => {
-    jwt.verify(token, process.env.JWT_SECRET, async (verifyErr, { login }) => {
-      if (verifyErr) {
-        console.log(verifyErr);
-        return reject(verifyErr);
-      }
-
-      try {
-        const isRevoked = await prisma.revoked_tokens.count({
-          where: { token },
-        }) > 0;
-        return resolve({ isAuthorized: !isRevoked, login });
-      } catch (isRevokeErr) {
-        console.log(isRevokeErr);
-        return { isAuthorized: false };
-      }
-    });
-  });
-
+  let decodedAccessToken;
   try {
-    const jwtVerifyResult = await jwtVerifyPromise;
-    return { ...jwtVerifyResult, accessToken: token };
-  } catch {
-    return { isAuthorized: false };
-  }
-};
-
-module.exports.unauthorizationRequireMiddleware = async (req, res, next) => {
-  const status = await getAuthorizationStatus(req);
-
-  if (status.isAuthorized) {
-    return responseHelper.sendBadRequest(req, res, {
-      extended_msg: `Sign out before use ${req.path} method`,
-    });
+    const jwtVerify = util.promisify(jwt.verify);
+    decodedAccessToken = await jwtVerify(accessToken, process.env.JWT_SECRET);
+  } catch (err) {
+    if (err instanceof JsonWebTokenError) {
+      return { isAuthorized: false };
+    }
+    throw err;
   }
 
-  return next();
+  const accessTokenRevoked = await prisma.revoked_tokens.count({
+    where: { token: accessToken },
+  }) > 0;
+
+  return {
+    isAuthorized: !accessTokenRevoked,
+    userId: decodedAccessToken.userId,
+    login: decodedAccessToken.login,
+    accessToken,
+  };
 };
 
-module.exports.authorizationRequireMiddleware = async (req, res, next) => {
-  const status = await getAuthorizationStatus(req);
-
-  if (!status.isAuthorized) {
-    return responseHelper.sendUnauthorized(req, res);
-  }
-
-  req.login = status.login;
-  req.accessToken = status.accessToken;
-
-  return next();
-};
-
-module.exports.createAccessToken = (userId, login) => jwt.sign({
+/**
+ * @param {BigInt} userId
+ * @param {String} login
+ * @returns {String}
+ */
+const createAccessToken = (userId, login) => jwt.sign({
   iss: process.env.JWT_ISSUER,
   aud: process.env.JWT_AUDIENCE,
-  exp: Date.now() + (1000 * 60 * 60 * 5),
+  exp: getAccessTokenExpiresAt().getTime(),
   alg: 'HS256',
   userId: userId.toString(),
   login,
 }, process.env.JWT_SECRET);
 
-module.exports.createRefreshToken = (accessToken, expiresAt) => jwt.sign({
+/**
+ * @param {String} accessToken
+ * @returns {String}
+ */
+const createRefreshToken = (accessToken) => jwt.sign({
   iss: process.env.JWT_ISSUER,
   aud: process.env.JWT_AUDIENCE,
-  exp: expiresAt,
+  exp: getRefreshTokenExpiresAt().getTime(),
   alg: 'HS256',
   accessToken,
 }, process.env.JWT_SECRET);
 
-module.exports.revokeUserTokens = async (accessToken) => {
+/**
+ * Returns access and refresh tokens
+ * @typedef {Object} PairOfTokens
+ * @property {String} accessToken
+ * @property {String} refreshToken
+ * @param {BigInt} userId
+ * @param {String} login
+ * @returns {PairOfTokens}
+ */
+const createPairOfTokensAsync = async (userId, login) => {
+  const accessToken = createAccessToken(userId, login);
+  const refreshToken = createRefreshToken(accessToken);
+
+  const tokensCreatedAt = new Date();
+  const refreshTokenExpiresAt = getRefreshTokenExpiresAt();
+
+  await prisma.refresh_tokens.create({
+    data: {
+      token: refreshToken,
+      users: {
+        connect: { login },
+      },
+      created_at: tokensCreatedAt,
+      expires_at: refreshTokenExpiresAt,
+    },
+  });
+
+  return { accessToken, refreshToken };
+};
+
+/**
+ * Revoke access and refresh user tokens
+ * @param {String} accessToken
+ */
+const revokeUserTokensAsync = async (accessToken) => {
   const { userId } = jwt.decode(accessToken);
 
   const refreshToken = (await prisma.refresh_tokens.findFirst({
@@ -93,8 +145,11 @@ module.exports.revokeUserTokens = async (accessToken) => {
     },
   })).token;
 
-  console.log(accessToken);
-  console.log(refreshToken);
+  await prisma.refresh_tokens.delete({
+    where: {
+      token: refreshToken,
+    },
+  });
 
   await prisma.revoked_tokens.createMany({
     data: [
@@ -103,3 +158,60 @@ module.exports.revokeUserTokens = async (accessToken) => {
     ],
   });
 };
+
+/**
+ * Express middleware which checks is user unauthorized (safety)
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ * @param {import('express').NextFunction} next
+ * @returns
+ */
+const unauthorizationRequireAsync = async (req, res, next) => {
+  try {
+    const { isAuthorized } = await getAuthorizationStateAsync(req);
+
+    if (isAuthorized) {
+      return responseHelper.sendBadRequest(req, res, {
+        extended_msg: `Sign out before use ${req.path} method`,
+      });
+    }
+
+    return next();
+  } catch (err) {
+    console.error(err);
+    return responseHelper.sendInternalServerError(req, res);
+  }
+};
+
+/**
+ * Express middleware which checks is user authorized (safety)
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ * @param {import('express').NextFunction} next
+ * @returns
+ */
+const authorizationRequireAsync = async (req, res, next) => {
+  try {
+    const {
+      isAuthorized, userId, login, accessToken,
+    } = await getAuthorizationStateAsync(req);
+
+    if (!isAuthorized) {
+      return responseHelper.sendUnauthorized(req, res);
+    }
+
+    req.userId = userId;
+    req.login = login;
+    req.accessToken = accessToken;
+
+    return next();
+  } catch (err) {
+    console.error(err);
+    return responseHelper.sendInternalServerError(req, res);
+  }
+};
+
+module.exports.unauthorizationRequireAsync = unauthorizationRequireAsync;
+module.exports.authorizationRequireAsync = authorizationRequireAsync;
+module.exports.createPairOfTokensAsync = createPairOfTokensAsync;
+module.exports.revokeUserTokensAsync = revokeUserTokensAsync;
