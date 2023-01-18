@@ -11,11 +11,13 @@ const {
 
 const router = Router();
 
-router.get('/:id', authorizationRequireAsync, getWorkspace);
-router.post('/', authorizationRequireAsync, createWorkspace);
-router.put('/:id', authorizationRequireAsync, updateWorkspace);
-router.delete('/:id', authorizationRequireAsync, deleteWorkspace);
-router.get('/', authorizationRequireAsync, listWorkspaces);
+router.use('/', authorizationRequireAsync);
+
+router.get('/', listWorkspaces);
+router.get('/:id', getWorkspace);
+router.post('/', createWorkspace);
+router.put('/:id', updateWorkspace);
+router.delete('/:id', deleteWorkspace);
 router.all('*', sendNotFound);
 
 module.exports = router;
