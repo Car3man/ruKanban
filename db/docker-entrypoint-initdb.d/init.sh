@@ -137,8 +137,7 @@ CREATE TABLE public.user_workspace
     workspace_id BIGINT NOT NULL,
     workspace_role_id BIGINT NOT NULL,
     PRIMARY KEY (id),
-    UNIQUE (user_id),
-    UNIQUE (workspace_id)
+    UNIQUE (user_id, workspace_id)
 );
 
 CREATE TABLE public.user_board
@@ -147,8 +146,7 @@ CREATE TABLE public.user_board
     user_id BIGINT NOT NULL,
     board_id BIGINT NOT NULL,
     PRIMARY KEY (id),
-    UNIQUE (user_id),
-    UNIQUE (board_id)  
+    UNIQUE (user_id, board_id)
 );
 
 CREATE TABLE public.user_ticket
@@ -157,8 +155,7 @@ CREATE TABLE public.user_ticket
     user_id BIGINT NOT NULL,
     ticket_id BIGINT NOT NULL,
     PRIMARY KEY (id),
-    UNIQUE (user_id),
-    UNIQUE (ticket_id)  
+    UNIQUE (user_id, ticket_id)
 );
 
 -- Relationships
