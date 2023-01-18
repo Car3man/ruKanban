@@ -4,6 +4,7 @@ const { PrismaClient } = require('@prisma/client');
 const { JsonWebTokenError } = require('jsonwebtoken');
 const responseHelper = require('./response-helper');
 
+const jwtVerify = util.promisify(jwt.verify);
 const prisma = new PrismaClient();
 
 /**
@@ -35,6 +36,35 @@ const getAccessTokenFromHeader = (req) => {
 };
 
 /**
+ * Verify JWT token
+ * @typedef {Object} VerifyResult
+ * @property {Boolean} isValid
+ * @property {Object} payload
+ * @param {String} token
+ * @returns {VerifyResult} token payload
+ */
+const verifyTokenAsync = async (token) => {
+  let payload;
+  try {
+    payload = await jwtVerify(token, process.env.JWT_SECRET);
+  } catch (err) {
+    if (err instanceof JsonWebTokenError) {
+      return { isValid: false };
+    }
+    throw err;
+  }
+  return { isValid: true, payload };
+};
+
+/**
+ * @param {String} token
+ * @returns {Boolean}
+ */
+const isTokenRevokedAsync = async (token) => await prisma.revoked_tokens.count({
+  where: { token },
+}) > 0;
+
+/**
  * @param {import('express').Request} req
  * @typedef {Object} AuthorizationState
  * @property {Boolean} isAuthorized
@@ -50,25 +80,17 @@ const getAuthorizationStateAsync = async (req) => {
     return { isAuthorized: false };
   }
 
-  let decodedAccessToken;
-  try {
-    const jwtVerify = util.promisify(jwt.verify);
-    decodedAccessToken = await jwtVerify(accessToken, process.env.JWT_SECRET);
-  } catch (err) {
-    if (err instanceof JsonWebTokenError) {
-      return { isAuthorized: false };
-    }
-    throw err;
+  const verifyResult = await verifyTokenAsync(accessToken);
+  if (!verifyResult.isValid) {
+    return { isAuthorized: false };
   }
 
-  const accessTokenRevoked = await prisma.revoked_tokens.count({
-    where: { token: accessToken },
-  }) > 0;
+  const isAccessTokenRevoked = await isTokenRevokedAsync(accessToken);
 
   return {
-    isAuthorized: !accessTokenRevoked,
-    userId: decodedAccessToken.userId,
-    login: decodedAccessToken.login,
+    isAuthorized: !isAccessTokenRevoked,
+    userId: verifyResult.payload.userId,
+    login: verifyResult.payload.login,
     accessToken,
   };
 };
@@ -211,6 +233,9 @@ const authorizationRequireAsync = async (req, res, next) => {
   }
 };
 
+module.exports.verifyTokenAsync = verifyTokenAsync;
+module.exports.isTokenRevokedAsync = isTokenRevokedAsync;
+module.exports.getAccessTokenFromHeader = getAccessTokenFromHeader;
 module.exports.unauthorizationRequireAsync = unauthorizationRequireAsync;
 module.exports.authorizationRequireAsync = authorizationRequireAsync;
 module.exports.createPairOfTokensAsync = createPairOfTokensAsync;
