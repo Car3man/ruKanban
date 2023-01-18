@@ -9,14 +9,14 @@ datasource db {
 }
 
 model boards {
-  id           BigInt      @id @default(autoincrement())
+  id           BigInt       @id @default(autoincrement())
   workspace_id BigInt
-  name         String      @db.VarChar(36)
-  description  String      @db.VarChar(36)
-  created_at   DateTime    @db.Timestamp(6)
-  workspaces   workspaces  @relation(fields: [workspace_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_boards_workspaces")
+  name         String       @db.VarChar(36)
+  description  String       @db.VarChar(36)
+  created_at   DateTime     @db.Timestamp(6)
+  workspaces   workspaces   @relation(fields: [workspace_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_boards_workspaces")
   columns      columns[]
-  user_board   user_board?
+  user_board   user_board[]
 }
 
 model columns {
@@ -45,40 +45,46 @@ model roles {
 }
 
 model tickets {
-  id          BigInt       @id @default(autoincrement())
+  id          BigInt        @id @default(autoincrement())
   columnd_id  BigInt
-  index       Int          @unique
-  title       String       @db.VarChar(128)
-  description String       @db.VarChar(2048)
-  created_at  DateTime     @db.Timestamp(6)
-  columns     columns      @relation(fields: [columnd_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_tickets_columns")
-  user_ticket user_ticket?
+  index       Int           @unique
+  title       String        @db.VarChar(128)
+  description String        @db.VarChar(2048)
+  created_at  DateTime      @db.Timestamp(6)
+  columns     columns       @relation(fields: [columnd_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_tickets_columns")
+  user_ticket user_ticket[]
 }
 
 model user_board {
   id       BigInt @id @default(autoincrement())
-  user_id  BigInt @unique
-  board_id BigInt @unique
+  user_id  BigInt
+  board_id BigInt
   boards   boards @relation(fields: [board_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_board_boards")
   users    users  @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_board_users")
+
+  @@unique([user_id, board_id])
 }
 
 model user_ticket {
   id        BigInt  @id @default(autoincrement())
-  user_id   BigInt  @unique
-  ticket_id BigInt  @unique
+  user_id   BigInt
+  ticket_id BigInt
   tickets   tickets @relation(fields: [ticket_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_ticket_tickets")
   users     users   @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_ticket_users")
+
+  @@unique([user_id, ticket_id])
 }
 
 model user_workspace {
   id                BigInt          @id @default(autoincrement())
-  user_id           BigInt          @unique
-  workspace_id      BigInt          @unique
+  user_id           BigInt
+  workspace_id      BigInt
   workspace_role_id BigInt
   users             users           @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_workspace_users")
   workspaces        workspaces      @relation(fields: [workspace_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_workspace_workspaces")
   workspace_roles   workspace_roles @relation(fields: [workspace_role_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_workspaces_workspace_roles")
+
+  @@unique([user_id, workspace_id])
 }
 
 model users {
@@ -91,9 +97,9 @@ model users {
   role_id        BigInt
   created_at     DateTime         @db.Timestamp(6)
   refresh_tokens refresh_tokens[]
-  user_board     user_board?
-  user_ticket    user_ticket?
-  user_workspace user_workspace?
+  user_board     user_board[]
+  user_ticket    user_ticket[]
+  user_workspace user_workspace[]
   roles          roles            @relation(fields: [role_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_users_roles")
 }
 
@@ -104,11 +110,11 @@ model workspace_roles {
 }
 
 model workspaces {
-  id             BigInt          @id @default(autoincrement())
-  name           String          @db.VarChar(36)
-  created_at     DateTime        @db.Timestamp(6)
+  id             BigInt           @id @default(autoincrement())
+  name           String           @db.VarChar(36)
+  created_at     DateTime         @db.Timestamp(6)
   boards         boards[]
-  user_workspace user_workspace?
+  user_workspace user_workspace[]
 }
 
 model revoked_tokens {
