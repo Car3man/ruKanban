@@ -12,24 +12,20 @@ const prisma = new PrismaClient();
  */
 const changePassword = async (req, res) => {
   try {
-    const { login, accessToken } = req;
-    const { currentPassword, newPassword } = req.body;
-
-    console.log(`login: ${login}`);
+    const { login } = req;
+    const accessToken = req.access_token;
+    const currentPassword = req.body.current_password;
+    const newPassword = req.body.new_password;
 
     const userData = await prisma.users.findFirstOrThrow({
       where: { login },
     });
 
-    console.log(`userData: ${userData}`);
-
     if (userData.password_hash !== md5(currentPassword)) {
       return responseHelper.sendBadRequest(req, res, {
-        extended_msg: 'Provided \'currentPassword\' doesn\'t match actual.',
+        error_msg: 'Provided \'currentPassword\' doesn\'t match actual.',
       });
     }
-
-    console.log(`login: ${login}`);
 
     await prisma.users.update({
       where: {

@@ -10,26 +10,26 @@ const responseHelper = require('../../common/response-helper');
 const refreshTokens = async (req, res) => {
   try {
     const currentAccessToken = authHelper.getAccessTokenFromHeader(req);
-    const currentRefreshToken = req.body.refreshToken;
+    const currentRefreshToken = req.body.refresh_token;
 
     const isAccessTokenRevoked = await authHelper.isTokenRevokedAsync(currentAccessToken);
     if (isAccessTokenRevoked) {
       return responseHelper.sendBadRequest(req, res, {
-        extended_msg: 'The access token is revoked',
+        error_msg: 'The access token is revoked',
       });
     }
 
     const verifyRefreshTokenResult = await authHelper.verifyTokenAsync(currentRefreshToken);
     if (!verifyRefreshTokenResult.isValid) {
       return responseHelper.sendBadRequest(req, res, {
-        extended_msg: 'The refresh token invalid',
+        error_msg: 'The refresh token invalid',
       });
     }
 
     const accessTokenFromRefreshToken = verifyRefreshTokenResult.payload.accessToken;
     if (accessTokenFromRefreshToken !== currentAccessToken) {
       return responseHelper.sendBadRequest(req, res, {
-        extended_msg: 'Invalid pair access-refresh tokens',
+        error_msg: 'Invalid pair access-refresh tokens',
       });
     }
 
@@ -39,8 +39,8 @@ const refreshTokens = async (req, res) => {
     const { accessToken, refreshToken } = await authHelper.createPairOfTokensAsync(userId, login);
 
     return responseHelper.sendOk(req, res, {
-      accessToken,
-      refreshToken,
+      access_token: accessToken,
+      refresh_token: refreshToken,
     });
   } catch (err) {
     console.error(err);

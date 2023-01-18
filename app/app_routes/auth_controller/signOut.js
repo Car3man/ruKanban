@@ -8,7 +8,7 @@ const responseHelper = require('../../common/response-helper');
  */
 const signOut = async (req, res) => {
   try {
-    const { accessToken } = req;
+    const accessToken = req.access_token;
     await authHelper.revokeUserTokensAsync(accessToken);
     return responseHelper.sendOk(req, res);
   } catch (err) {

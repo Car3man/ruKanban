@@ -194,7 +194,7 @@ const unauthorizationRequireAsync = async (req, res, next) => {
 
     if (isAuthorized) {
       return responseHelper.sendBadRequest(req, res, {
-        extended_msg: `Sign out before use ${req.path} method`,
+        error_msg: `Sign out before use ${req.path} method`,
       });
     }
 
@@ -224,7 +224,7 @@ const authorizationRequireAsync = async (req, res, next) => {
 
     req.userId = userId;
     req.login = login;
-    req.accessToken = accessToken;
+    req.access_token = accessToken;
 
     return next();
   } catch (err) {

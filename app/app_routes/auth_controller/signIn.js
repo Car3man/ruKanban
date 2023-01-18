@@ -20,18 +20,25 @@ const signIn = async (req, res) => {
 
     if (!userData) {
       return responseHelper.sendBadRequest(req, res, {
-        extended_msg: 'The login or password is wrong.',
+        error_msg: 'The login or password is wrong.',
       });
     }
 
     if (userData.password_hash !== md5(password)) {
       return responseHelper.sendBadRequest(req, res, {
-        extended_msg: 'The login or password is wrong.',
+        error_msg: 'The login or password is wrong.',
       });
     }
 
-    const pairOfTokens = await authHelper.createPairOfTokensAsync(userData.id, login);
-    return responseHelper.sendOk(req, res, pairOfTokens);
+    const {
+      accessToken,
+      refreshToken,
+    } = await authHelper.createPairOfTokensAsync(userData.id, login);
+
+    return responseHelper.sendOk(req, res, {
+      access_token: accessToken,
+      refresh_token: refreshToken,
+    });
   } catch (err) {
     console.error(err);
     return responseHelper.sendInternalServerError(req, res);

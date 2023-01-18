@@ -12,9 +12,11 @@ const prisma = new PrismaClient();
  */
 const signUp = async (req, res) => {
   try {
-    const {
-      login, password, firstName, surName, patronymic,
-    } = req.body;
+    const { login } = req.body;
+    const { password } = req.body;
+    const firstName = req.body.first_name;
+    const surName = req.body.sur_name;
+    const { patronymic } = req.body;
 
     const isUserExist = await prisma.users.count({
       where: { login },
@@ -22,7 +24,7 @@ const signUp = async (req, res) => {
 
     if (isUserExist) {
       return responseHelper.sendBadRequest(req, res, {
-        extended_msg: 'The user with same login exist.',
+        error_msg: 'The user with same login exist.',
       });
     }
 
@@ -45,8 +47,8 @@ const signUp = async (req, res) => {
     const { accessToken, refreshToken } = await authHelper.createPairOfTokensAsync(userId, login);
 
     return responseHelper.sendOk(req, res, {
-      accessToken,
-      refreshToken,
+      access_token: accessToken,
+      refresh_token: refreshToken,
     });
   } catch (err) {
     console.error(err);
