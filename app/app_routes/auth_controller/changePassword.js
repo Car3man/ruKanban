@@ -1,8 +1,3 @@
-/**
- * Change password endpoint.
- * @module /routes/auth/changePassword
- */
-
 const { PrismaClient } = require('@prisma/client');
 const md5 = require('md5');
 const authHelper = require('../../common/auth-helper');
