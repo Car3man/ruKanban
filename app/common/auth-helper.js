@@ -11,7 +11,7 @@ const prisma = new PrismaClient();
  * Returns date when access token will expire, using current date time
  * @returns {Date}
  */
-const getAccessTokenExpiresAt = () => new Date(Date.now() + (1000 * 60 * 5));
+const getAccessTokenExpiresAt = () => new Date(Date.now() + (1000 * 60 * 60 * 5)); // TODO: decrease to 5 minutes
 
 /**
  * Returns date when refresh token will expire, using current date time
