@@ -3,6 +3,30 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 /**
+ * @typedef {Object} ValidationResult
+ * @property {Boolean} isValid
+ * @property {String|Undefined} details
+ * @param {String} name
+ * @returns {ValidationResult}
+ */
+const isWorkspaceNameValid = (name) => {
+  if (typeof name !== 'string') {
+    return { isValid: false, details: 'Name type should be a String.' };
+  }
+
+  const trimmedName = name.trim();
+  if (trimmedName.length < 5) {
+    return { isValid: false, details: 'Name length should be greater than 5.' };
+  }
+
+  if (trimmedName.length > 36) {
+    return { isValid: false, details: 'Name length should be less or equals than 36' };
+  }
+
+  return { isValid: true };
+};
+
+/**
  * @param {BigInt} userId
  * @param {BigInt} workspaceId
  */
@@ -97,6 +121,7 @@ const isUserCanUpdateBoardsAsync = async (userId, workspaceId) => isUserWorkspac
  */
 const isUserCanDeleteBoardsAsync = async (userId, workspaceId) => isUserWorkspaceRoleOwner(userId, workspaceId);
 
+module.exports.isWorkspaceNameValid = isWorkspaceNameValid;
 module.exports.isUserCanGetWorkspaceAsync = isUserCanGetWorkspaceAsync;
 module.exports.isUserCanCreateWorkspaceAsync = isUserCanCreateWorkspaceAsync;
 module.exports.isUserCanUpdateWorkspaceAsync = isUserCanUpdateWorkspaceAsync;
