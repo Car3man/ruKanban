@@ -15,6 +15,13 @@ const createWorkspace = async (req, res) => {
     const { userId, login } = req;
     const { name } = req.body;
 
+    const nameValidationResult = workspaceHelper.isWorkspaceNameValid(name);
+    if (!nameValidationResult.isValid) {
+      return responseHelper.sendBadRequest(req, res, {
+        error_msg: nameValidationResult.details,
+      });
+    }
+
     const isAllow = await workspaceHelper.isUserCanCreateWorkspaceAsync(userId);
     if (!isAllow) {
       return responseHelper.sendForbidden(req, res);
@@ -22,7 +29,7 @@ const createWorkspace = async (req, res) => {
 
     let createResult = await prisma.workspaces.create({
       data: {
-        name,
+        name: name.trim(),
         created_at: new Date(),
         user_workspace: {
           create: [
