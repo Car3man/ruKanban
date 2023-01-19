@@ -27,6 +27,7 @@ const getUserWorkspaceRoleName = async (userId, workspaceId) => {
     where: {
       id: userWorkspaceRoleId,
     },
+    select: { name: true },
   })).name;
 
   return userWorkspaceRoleName;

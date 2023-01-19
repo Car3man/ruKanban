@@ -16,6 +16,10 @@ const signIn = async (req, res) => {
 
     const userData = await prisma.users.findFirst({
       where: { login },
+      select: {
+        id: true,
+        password_hash: true,
+      },
     });
 
     if (!userData) {

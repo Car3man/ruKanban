@@ -19,6 +19,7 @@ const changePassword = async (req, res) => {
 
     const userData = await prisma.users.findFirstOrThrow({
       where: { login },
+      select: { password_hash: true },
     });
 
     if (userData.password_hash !== md5(currentPassword)) {
