@@ -43,7 +43,7 @@ const createWorkspace = async (req, res) => {
       },
     });
 
-    createResult = utils.escapeBigInt(createResult);
+    createResult = utils.escapeObjectBigInt(createResult);
     return responseHelper.sendOk(req, res, createResult);
   } catch (err) {
     console.error(err);
