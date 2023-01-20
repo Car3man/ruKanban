@@ -22,11 +22,13 @@ model boards {
 model columns {
   id         BigInt    @id @default(autoincrement())
   board_id   BigInt
-  index      Int       @unique
+  index      Int
   name       String    @db.VarChar(36)
   created_at DateTime  @db.Timestamp(6)
   boards     boards    @relation(fields: [board_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_columns_boards")
   tickets    tickets[]
+
+  @@unique([board_id, index])
 }
 
 model refresh_tokens {
@@ -38,6 +40,12 @@ model refresh_tokens {
   users      users    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_refresh_tokens_users")
 }
 
+model revoked_tokens {
+  id         BigInt   @id @default(autoincrement())
+  token      String   @unique
+  revoked_at DateTime @db.Timestamp(6)
+}
+
 model roles {
   id    BigInt  @id @default(autoincrement())
   name  String  @unique @db.VarChar(36)
@@ -46,13 +54,15 @@ model roles {
 
 model tickets {
   id          BigInt        @id @default(autoincrement())
-  columnd_id  BigInt
-  index       Int           @unique
+  column_id   BigInt
+  index       Int
   title       String        @db.VarChar(128)
   description String        @db.VarChar(2048)
   created_at  DateTime      @db.Timestamp(6)
-  columns     columns       @relation(fields: [columnd_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_tickets_columns")
+  columns     columns       @relation(fields: [column_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_tickets_columns")
   user_ticket user_ticket[]
+
+  @@unique([column_id, index])
 }
 
 model user_board {
@@ -115,10 +125,4 @@ model workspaces {
   created_at     DateTime         @db.Timestamp(6)
   boards         boards[]
   user_workspace user_workspace[]
-}
-
-model revoked_tokens {
-  id         BigInt   @id @default(autoincrement())
-  token      String   @unique
-  revoked_at DateTime @db.Timestamp(6)
 }

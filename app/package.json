@@ -2,9 +2,9 @@
     "name": "ru-kanban",
     "version": "0.1.0",
     "description": "Kanban service",
-    "main": "index.js",
+    "main": "server.js",
     "scripts": {
-        "start": "nodemon app.js"
+        "start": "nodemon ./src/app.js"
     },
     "author": "Arthur Klopov",
     "dependencies": {

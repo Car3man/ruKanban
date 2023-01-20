@@ -107,19 +107,19 @@ CREATE TABLE public.columns
     name CHARACTER VARYING(36) NOT NULL,
     created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL,
     PRIMARY KEY (id),
-    UNIQUE (index)
+    UNIQUE (board_id, index)
 );
 
 CREATE TABLE public.tickets
 (
     id BIGSERIAL NOT NULL,
-    columnd_id BIGINT NOT NULL,
+    column_id BIGINT NOT NULL,
     index int NOT NULL,
     title CHARACTER VARYING(128) NOT NULL,
     description CHARACTER VARYING(2048) NOT NULL,
     created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL,
     PRIMARY KEY (id),
-    UNIQUE (index)
+    UNIQUE (column_id, index)
 );
 
 CREATE TABLE public.workspace_roles
@@ -172,7 +172,7 @@ ALTER TABLE public.users
 
 ALTER TABLE public.tickets
     ADD CONSTRAINT fk_tickets_columns
-    FOREIGN KEY (columnd_id)
+    FOREIGN KEY (column_id)
     REFERENCES public.columns (id);
 
 ALTER TABLE public.columns
