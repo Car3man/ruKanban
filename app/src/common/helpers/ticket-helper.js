@@ -97,12 +97,20 @@ async function createTicket(columnId, title, description) {
 /**
  * @async
  * @param {BigInt} ticketId
+ * @param {BigInt} newColumnId
  * @param {Number} newIndex
  * @param {String} newTitle
  * @param {String} newDescription
  */
-async function updateTicket(ticketId, newIndex, newTitle, newDescription) {
+async function updateTicket(ticketId, newColumnId, newIndex, newTitle, newDescription) {
   return prisma.$transaction(async (tx) => {
+    if (newColumnId) {
+      await tx.tickets.update({
+        where: { id: ticketId },
+        data: { column_id: newColumnId },
+      });
+    }
+
     if (newIndex) {
       await tx.tickets.update({
         where: { id: ticketId },

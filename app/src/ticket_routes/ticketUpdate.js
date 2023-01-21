@@ -10,7 +10,8 @@ const ticketUpdate = async (req, res) => {
   try {
     const { userId } = req;
     const ticketId = BigInt(req.query.ticket_id);
-    const newTicketIndex = req.body.index;
+    const newTicketColumnId = BigInt(req.body.column_id);
+    const newTicketIndex = Number(req.body.index);
     const newTicketTitle = req.body.title;
     const newTicketDescription = req.body.description;
 
@@ -45,7 +46,7 @@ const ticketUpdate = async (req, res) => {
       }
     }
 
-    await ticketHelper.updateTicket(ticketId, newTicketIndex, newTicketTitle, newTicketDescription);
+    await ticketHelper.updateTicket(ticketId, newTicketColumnId, newTicketIndex, newTicketTitle, newTicketDescription);
 
     return responseHelper.sendOk(req, res);
   } catch (err) {
