@@ -36,10 +36,12 @@ function isWorkspaceNameValid(name) {
  * @param {BigInt} id
  * @returns {Array<import('@prisma/client').user_workspace}
  */
-async function getWorkspaceUsers(id) {
+async function getWorkspaceUsers(id, skip, take) {
   return prisma.user_workspace.findMany({
     where: { workspace_id: id },
     select: { user_id: true },
+    skip,
+    take,
   });
 }
 
