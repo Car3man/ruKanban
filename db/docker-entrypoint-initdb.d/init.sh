@@ -94,7 +94,7 @@ CREATE TABLE public.boards
     id BIGSERIAL NOT NULL,
     workspace_id BIGINT NOT NULL,
     name CHARACTER VARYING(36) NOT NULL,
-    description CHARACTER VARYING(36) NOT NULL,
+    description CHARACTER VARYING(128) NOT NULL,
     created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL,
     PRIMARY KEY (id)
 );
