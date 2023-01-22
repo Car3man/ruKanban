@@ -61,6 +61,8 @@ const authSignUp = async (req, res) => {
     const { accessToken, refreshToken } = await authHelper.createPairOfTokens(userId, login);
 
     return responseHelper.sendOk(req, res, {
+      user_id: userId.toString(),
+      login,
       access_token: accessToken,
       refresh_token: refreshToken,
     });
