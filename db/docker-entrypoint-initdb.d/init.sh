@@ -173,17 +173,17 @@ ALTER TABLE public.users
 ALTER TABLE public.tickets
     ADD CONSTRAINT fk_tickets_columns
     FOREIGN KEY (column_id)
-    REFERENCES public.columns (id);
+    REFERENCES public.columns (id) ON DELETE CASCADE;
 
 ALTER TABLE public.columns
     ADD CONSTRAINT fk_columns_boards
     FOREIGN KEY (board_id)
-    REFERENCES public.boards (id);
+    REFERENCES public.boards (id) ON DELETE CASCADE;
 
 ALTER TABLE public.boards
     ADD CONSTRAINT fk_boards_workspaces
     FOREIGN KEY (workspace_id)
-    REFERENCES public.workspaces (id);
+    REFERENCES public.workspaces (id) ON DELETE CASCADE;
 
 ALTER TABLE public.user_workspace
     ADD CONSTRAINT fk_user_workspace_users
@@ -193,7 +193,7 @@ ALTER TABLE public.user_workspace
 ALTER TABLE public.user_workspace
     ADD CONSTRAINT fk_user_workspace_workspaces
     FOREIGN KEY (workspace_id)
-    REFERENCES public.workspaces (id);
+    REFERENCES public.workspaces (id) ON DELETE CASCADE;
 
 ALTER TABLE public.user_workspace
     ADD CONSTRAINT fk_user_workspaces_workspace_roles
@@ -208,7 +208,7 @@ ALTER TABLE public.user_board
 ALTER TABLE public.user_board
     ADD CONSTRAINT fk_user_board_boards
     FOREIGN KEY (board_id)
-    REFERENCES public.boards (id);
+    REFERENCES public.boards (id) ON DELETE CASCADE;
 
 ALTER TABLE public.user_ticket
     ADD CONSTRAINT fk_user_ticket_users
@@ -218,7 +218,7 @@ ALTER TABLE public.user_ticket
 ALTER TABLE public.user_ticket
     ADD CONSTRAINT fk_user_ticket_tickets
     FOREIGN KEY (ticket_id)
-    REFERENCES public.tickets (id);
+    REFERENCES public.tickets (id) ON DELETE CASCADE;
 
 -- Init data
 
