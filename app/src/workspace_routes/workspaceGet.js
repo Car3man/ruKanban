@@ -12,7 +12,7 @@ const workspaceGet = async (req, res) => {
     let { startAt, limit } = req.query;
 
     startAt = startAt || 0;
-    limit = limit || 10;
+    limit = limit || 25;
 
     const workspaces = await workspaceHelper.getWorkspacesByUserId(userId, startAt, limit);
 

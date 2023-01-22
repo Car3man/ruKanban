@@ -11,7 +11,7 @@ const columnGet = async (req, res) => {
     const { userId } = req;
     const boardId = BigInt(req.query.board_id);
     const startAt = req.query.start_at || 0;
-    const limit = req.query.limit || 10;
+    const limit = req.query.limit || 100;
 
     const isAllowToGet = await boardHelper.isUserBoardParticipant(userId, boardId);
     if (!isAllowToGet) {

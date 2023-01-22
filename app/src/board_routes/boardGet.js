@@ -11,7 +11,7 @@ const boardGet = async (req, res) => {
     const { userId } = req;
     const workspaceId = BigInt(req.query.workspace_id);
     const startAt = req.query.start_at || 0;
-    const limit = req.query.limit || 10;
+    const limit = req.query.limit || 25;
 
     const isAllowToGet = await workspaceHelper.isUserWorkspaceParticipant(userId, workspaceId);
     if (!isAllowToGet) {
