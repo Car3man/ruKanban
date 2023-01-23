@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<theme>
+    <colors>
+        <primary color="#35A3BD"/>
+        <dark_primary color="#2E8EBD"/>
+        <secondary color="#4CB1BD"/>
+        <dark_secondary color="#52A0BD"/>
+        <tertiary color="#ffffff"/>
+        <dark_tertiary color="#ebecf0"/>
+    </colors>
+</theme>
