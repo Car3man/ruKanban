@@ -16,8 +16,8 @@ const boardUpdate = async (req, res) => {
     const boardId = BigInt(req.query.board_id);
     const newBoardName = req.body.name;
     const newBoardDescription = req.body.description;
-    const usersToAdd = req.body.usersToAdd ? req.body.usersToAdd.map((x) => BigInt(x)) : undefined;
-    const usersToDelete = req.body.usersToDelete ? req.body.usersToDelete.map((x) => BigInt(x)) : undefined;
+    const usersToAdd = req.body.users_to_add ? req.body.users_to_add.map((x) => BigInt(x)) : undefined;
+    const usersToDelete = req.body.users_to_delete ? req.body.users_to_delete.map((x) => BigInt(x)) : undefined;
 
     const board = await boardHelper.getBoardById(boardId);
 
