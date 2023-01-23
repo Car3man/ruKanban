@@ -37,11 +37,22 @@ function isWorkspaceNameValid(name) {
  * @returns {Array<import('@prisma/client').user_workspace}
  */
 async function getWorkspaceUsers(id, skip, take) {
-  return prisma.user_workspace.findMany({
+  const workspaceUserIds = (await prisma.user_workspace.findMany({
     where: { workspace_id: id },
     select: { user_id: true },
     skip,
     take,
+  })).map((x) => x.user_id);
+
+  return prisma.users.findMany({
+    where: { id: { in: workspaceUserIds } },
+    select: {
+      id: true,
+      login: true,
+      first_name: true,
+      sur_name: true,
+      patronymic: true,
+    },
   });
 }
 
@@ -151,6 +162,38 @@ async function createWorkspace(name, workspaceUsers) {
  * @param {Array<BigInt>|Undefined} usersToDelete
  */
 async function updateWorkspace(id, newName, usersToAdd, usersToDelete) {
+  let usersToAddIds;
+  let usersToDeleteIds;
+
+  if (usersToAdd) {
+    usersToAddIds = (await prisma.users.findMany({
+      where: { login: { in: usersToAdd } },
+      select: { id: true },
+    })).map((x) => x.id);
+  }
+
+  if (usersToDelete) {
+    usersToDeleteIds = (await prisma.users.findMany({
+      where: { login: { in: usersToDelete } },
+      select: { id: true },
+    })).map((x) => x.id);
+  }
+
+  const workspaceOwnerId = (await prisma.user_workspace.findFirst({
+    where: {
+      workspace_id: id,
+      workspace_roles: {
+        is: {
+          name: 'owner',
+        },
+      },
+    },
+  })).user_id;
+
+  if (usersToDeleteIds && usersToDeleteIds.includes(workspaceOwnerId)) {
+    throw new UpdateWorkspaceError('Impossible delete yourself from workspace.');
+  }
+
   return prisma.$transaction(async (tx) => {
     if (newName) {
       await tx.workspaces.update({
@@ -159,16 +202,16 @@ async function updateWorkspace(id, newName, usersToAdd, usersToDelete) {
       });
     }
 
-    if (usersToAdd || usersToDelete) {
+    if (usersToAddIds || usersToDeleteIds) {
       const workspaceUserIds = (await tx.user_workspace.findMany({
         where: { workspace_id: id },
         select: { user_id: true },
       })).map((x) => x.user_id);
 
-      if (usersToAdd && usersToAdd.length > 0) {
-        for (const userToAdd of usersToAdd) {
-          if (workspaceUserIds.includes(userToAdd)) {
-            throw new UpdateWorkspaceError(`User with user_id = '${userToAdd}' already added.`);
+      if (usersToAddIds && usersToAddIds.length > 0) {
+        for (const userToAddId of usersToAddIds) {
+          if (workspaceUserIds.includes(userToAddId)) {
+            throw new UpdateWorkspaceError(`User with user_id = '${userToAddId}' already added.`);
           }
         }
 
@@ -178,9 +221,9 @@ async function updateWorkspace(id, newName, usersToAdd, usersToDelete) {
         })).id;
 
         const userWorkspaceRecordsToInsert = [];
-        for (const userToAdd of usersToAdd) {
+        for (const userToAddId of usersToAddIds) {
           userWorkspaceRecordsToInsert.push({
-            user_id: userToAdd,
+            user_id: userToAddId,
             workspace_id: id,
             workspace_role_id: userWorkspaceRoleId,
           });
@@ -191,16 +234,16 @@ async function updateWorkspace(id, newName, usersToAdd, usersToDelete) {
         });
       }
 
-      if (usersToDelete && usersToDelete.length > 0) {
-        for (const userToDelete of usersToDelete) {
-          if (!workspaceUserIds.includes(userToDelete)) {
-            throw new UpdateWorkspaceError(`User with user_id = '${userToDelete}' there is no in the list of users.`);
+      if (usersToDeleteIds && usersToDeleteIds.length > 0) {
+        for (const userToDeleteId of usersToDeleteIds) {
+          if (!workspaceUserIds.includes(userToDeleteId)) {
+            throw new UpdateWorkspaceError(`User with user_id = '${userToDeleteId}' there is no in the list of users.`);
           }
         }
 
         await prisma.user_workspace.deleteMany({
           where: {
-            user_id: { in: usersToDelete },
+            user_id: { in: usersToDeleteIds },
             workspace_id: id,
           },
         });
