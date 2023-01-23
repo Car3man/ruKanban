@@ -1,5 +1,4 @@
 const { workspaceHelper, ticketHelper, responseHelper } = require('../common/helpers');
-const utils = require('../common/utils');
 
 /**
    * Create ticket business logic (safety)

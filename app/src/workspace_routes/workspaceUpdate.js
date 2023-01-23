@@ -1,9 +1,5 @@
-const { PrismaClient } = require('@prisma/client');
-
 const { workspaceHelper, responseHelper } = require('../common/helpers');
 const UpdateWorkspaceError = require('../common/errors/UpdateWorkspaceError');
-
-const prisma = new PrismaClient();
 
 /**
  * Update workspace business logic (safety)
