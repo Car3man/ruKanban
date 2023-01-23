@@ -155,7 +155,7 @@ const getAuthorizationState = async (req) => {
 const createAccessToken = (userId, login) => jwt.sign({
   iss: process.env.JWT_ISSUER,
   aud: process.env.JWT_AUDIENCE,
-  exp: getAccessTokenExpiresAt().getTime(),
+  exp: Math.floor(getAccessTokenExpiresAt().getTime() / 1000),
   alg: 'HS256',
   userId: userId.toString(),
   login,
@@ -168,7 +168,7 @@ const createAccessToken = (userId, login) => jwt.sign({
 const createRefreshToken = (accessToken) => jwt.sign({
   iss: process.env.JWT_ISSUER,
   aud: process.env.JWT_AUDIENCE,
-  exp: getRefreshTokenExpiresAt().getTime(),
+  exp: Math.floor(getRefreshTokenExpiresAt().getTime() / 1000),
   alg: 'HS256',
   accessToken,
 }, process.env.JWT_SECRET);
