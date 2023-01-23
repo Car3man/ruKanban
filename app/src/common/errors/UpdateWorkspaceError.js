@@ -6,3 +6,5 @@ class UpdateWorkspaceError extends Error {
     this.name = 'UpdateWorkspaceError';
   }
 }
+
+module.exports = UpdateWorkspaceError;
