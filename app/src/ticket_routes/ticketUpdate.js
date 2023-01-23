@@ -10,8 +10,8 @@ const ticketUpdate = async (req, res) => {
   try {
     const { userId } = req;
     const ticketId = BigInt(req.query.ticket_id);
-    const newTicketColumnId = BigInt(req.body.column_id);
-    const newTicketIndex = Number(req.body.index);
+    const newTicketColumnId = req.body.column_id ? BigInt(req.body.column_id) : undefined;
+    const newTicketIndex = req.body.index ? Number(req.body.index) : undefined;
     const newTicketTitle = req.body.title;
     const newTicketDescription = req.body.description;
 
