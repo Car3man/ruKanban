@@ -15,8 +15,8 @@ const workspaceUpdate = async (req, res) => {
     const { userId } = req;
     const workspaceId = BigInt(req.query.workspace_id);
     const newWorkspaceName = req.body.name;
-    const usersToAdd = req.body.usersToAdd ? req.body.usersToAdd.map((x) => BigInt(x)) : undefined;
-    const usersToDelete = req.body.usersToDelete ? req.body.usersToDelete.map((x) => BigInt(x)) : undefined;
+    const usersToAdd = req.body.users_to_add;
+    const usersToDelete = req.body.users_to_delete;
 
     const workspace = await workspaceHelper.getWorkspaceById(workspaceId);
 
@@ -36,23 +36,6 @@ const workspaceUpdate = async (req, res) => {
           error_msg: nameValidationResult.details,
         });
       }
-    }
-
-    const workspaceOwnerId = (await prisma.user_workspace.findFirst({
-      where: {
-        workspace_id: workspaceId,
-        workspace_roles: {
-          is: {
-            name: 'owner',
-          },
-        },
-      },
-    })).user_id;
-
-    if (usersToDelete && usersToDelete.includes(workspaceOwnerId)) {
-      return responseHelper.sendBadRequest(req, res, {
-        error_msg: 'Impossible delete yourself from workspace.',
-      });
     }
 
     try {
