@@ -22,7 +22,9 @@ const ticketGet = async (req, res) => {
 
     const tickets = await ticketHelper.getTicketsByColumnId(columnId, startAt, limit);
 
-    const result = tickets.map((x) => utils.escapeObjectBigInt(x));
+    const result = {
+      tickets: tickets.map((x) => utils.escapeObjectBigInt(x)),
+    };
     return responseHelper.sendOk(req, res, result);
   } catch (err) {
     console.log(err);

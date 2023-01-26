@@ -33,7 +33,9 @@ const boardCreate = async (req, res) => {
 
     const board = await boardHelper.createBoard(workspaceId, name, description, [userId]);
 
-    const result = utils.escapeObjectBigInt(board);
+    const result = {
+      board: utils.escapeObjectBigInt(board),
+    };
     return responseHelper.sendOk(req, res, result);
   } catch (err) {
     console.log(err);

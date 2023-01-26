@@ -97,40 +97,63 @@ async function createTicket(columnId, title, description) {
 /**
  * @async
  * @param {BigInt} ticketId
- * @param {BigInt} newColumnId
- * @param {Number} newIndex
- * @param {String} newTitle
- * @param {String} newDescription
+ * @param {String} title
  */
-async function updateTicket(ticketId, newColumnId, newIndex, newTitle, newDescription) {
+async function changeTicketTitle(ticketId, title) {
+  return prisma.tickets.update({
+    where: { id: ticketId },
+    data: { title },
+  });
+}
+
+/**
+ * @async
+ * @param {BigInt} ticketId
+ * @param {String} description
+ */
+async function changeTicketDescription(ticketId, description) {
+  return prisma.tickets.update({
+    where: { id: ticketId },
+    data: { description },
+  });
+}
+
+/**
+ * @async
+ * @param {BigInt} ticketId
+ * @param {BigInt} columnId
+ * @param {Number} index
+ */
+async function moveTicket(ticketId, columnId, index) {
   return prisma.$transaction(async (tx) => {
-    if (newColumnId) {
-      await tx.tickets.update({
-        where: { id: ticketId },
-        data: { column_id: newColumnId },
+    const currentColumnId = (await tx.tickets.findFirst({
+      where: { id: ticketId },
+      select: { column_id: true },
+    })).column_id;
+
+    if (columnId !== currentColumnId) {
+      await tx.tickets.updateMany({
+        where: {
+          column_id: columnId,
+          index: {
+            gte: index,
+          },
+        },
+        data: {
+          index: {
+            increment: 1,
+          },
+        },
       });
     }
 
-    if (newIndex) {
-      await tx.tickets.update({
-        where: { id: ticketId },
-        data: { index: newIndex },
-      });
-    }
-
-    if (newTitle) {
-      await tx.tickets.update({
-        where: { id: ticketId },
-        data: { title: newTitle },
-      });
-    }
-
-    if (newDescription) {
-      await tx.tickets.update({
-        where: { id: ticketId },
-        data: { description: newDescription },
-      });
-    }
+    await tx.tickets.update({
+      where: { id: ticketId },
+      data: {
+        column_id: columnId,
+        index,
+      },
+    });
   });
 }
 
@@ -196,7 +219,9 @@ module.exports.isTicketTitleValid = isTicketTitleValid;
 module.exports.isTicketDescriptionValid = isTicketDescriptionValid;
 module.exports.getNextTicketIndex = getNextTicketIndex;
 module.exports.createTicket = createTicket;
-module.exports.updateTicket = updateTicket;
+module.exports.changeTicketTitle = changeTicketTitle;
+module.exports.changeTicketDescription = changeTicketDescription;
+module.exports.moveTicket = moveTicket;
 module.exports.deleteTicket = deleteTicket;
 module.exports.getTicketsByColumnId = getTicketsByColumnId;
 module.exports.getTicketById = getTicketById;

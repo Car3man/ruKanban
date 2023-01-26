@@ -20,7 +20,9 @@ const boardGet = async (req, res) => {
 
     const boards = await boardHelper.getBoardsByWorkspaceId(workspaceId, startAt, limit);
 
-    const result = boards.map((x) => utils.escapeObjectBigInt(x));
+    const result = {
+      boards: boards.map((x) => utils.escapeObjectBigInt(x)),
+    };
     return responseHelper.sendOk(req, res, result);
   } catch (err) {
     console.log(err);

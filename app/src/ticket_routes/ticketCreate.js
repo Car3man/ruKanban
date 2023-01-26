@@ -35,7 +35,9 @@ const ticketCreate = async (req, res) => {
 
     const ticket = await ticketHelper.createTicket(columnId, title, description);
 
-    const result = utils.escapeObjectBigInt(ticket);
+    const result = {
+      ticket: utils.escapeObjectBigInt(ticket),
+    };
     return responseHelper.sendOk(req, res, result);
   } catch (err) {
     console.log(err);

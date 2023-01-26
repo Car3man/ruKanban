@@ -20,7 +20,9 @@ const columnGet = async (req, res) => {
 
     const columns = await columnHelper.getColumnsByBoardId(boardId, startAt, limit);
 
-    const result = columns.map((x) => utils.escapeObjectBigInt(x));
+    const result = {
+      columns: columns.map((x) => utils.escapeObjectBigInt(x)),
+    };
     return responseHelper.sendOk(req, res, result);
   } catch (err) {
     console.log(err);

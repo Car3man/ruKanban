@@ -28,7 +28,9 @@ const columnCreate = async (req, res) => {
 
     const column = await columnHelper.createColumn(boardId, name);
 
-    const result = utils.escapeObjectBigInt(column);
+    const result = {
+      column: utils.escapeObjectBigInt(column),
+    };
     return responseHelper.sendOk(req, res, result);
   } catch (err) {
     console.log(err);

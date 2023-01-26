@@ -22,7 +22,9 @@ const workspaceGetById = async (req, res) => {
       return responseHelper.sendForbidden(req, res);
     }
 
-    const result = utils.escapeObjectBigInt(workspace);
+    const result = {
+      workspace: utils.escapeObjectBigInt(workspace),
+    };
     return responseHelper.sendOk(req, res, result);
   } catch (err) {
     console.log(err);

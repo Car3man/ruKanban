@@ -24,7 +24,9 @@ const boardGetById = async (req, res) => {
       return responseHelper.sendForbidden(req, res);
     }
 
-    const result = utils.escapeObjectBigInt(board);
+    const result = {
+      board: utils.escapeObjectBigInt(board),
+    };
     return responseHelper.sendOk(req, res, result);
   } catch (err) {
     console.log(err);

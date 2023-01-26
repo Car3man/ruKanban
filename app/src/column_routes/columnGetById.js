@@ -24,7 +24,9 @@ const columnGetById = async (req, res) => {
       return responseHelper.sendForbidden(req, res);
     }
 
-    const result = utils.escapeObjectBigInt(column);
+    const result = {
+      column: utils.escapeObjectBigInt(column),
+    };
     return responseHelper.sendOk(req, res, result);
   } catch (err) {
     console.log(err);

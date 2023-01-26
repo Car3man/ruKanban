@@ -1,15 +1,16 @@
 const { workspaceHelper, ticketHelper, responseHelper } = require('../common/helpers');
-const utils = require('../common/utils');
 
 /**
-   * Create ticket business logic (safety)
-   * @param {import('express').Request} req
-   * @param {import('express').Response} res
-   */
-const ticketGetById = async (req, res) => {
+ * Move ticket business logic (safety)
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ */
+const ticketMove = async (req, res) => {
   try {
     const { userId } = req;
     const ticketId = BigInt(req.query.ticket_id);
+    const columnId = BigInt(req.body.column_id);
+    const index = Number(req.body.index);
 
     const ticket = await ticketHelper.getTicketById(ticketId);
 
@@ -19,19 +20,18 @@ const ticketGetById = async (req, res) => {
 
     const workspaceId = (await workspaceHelper.getWorkspaceByTicketId(ticketId)).id;
 
-    const isAllowToGet = await workspaceHelper.isUserWorkspaceParticipant(userId, workspaceId);
-    if (!isAllowToGet) {
+    const isAllowToUpdate = await workspaceHelper.isUserWorkspaceParticipant(userId, workspaceId);
+    if (!isAllowToUpdate) {
       return responseHelper.sendForbidden(req, res);
     }
 
-    const result = {
-      ticket: utils.escapeObjectBigInt(ticket),
-    };
-    return responseHelper.sendOk(req, res, result);
+    await ticketHelper.moveTicket(ticket.id, columnId, index);
+
+    return responseHelper.sendOk(req, res);
   } catch (err) {
     console.log(err);
     return responseHelper.sendInternalServerError(req, res);
   }
 };
 
-module.exports = ticketGetById;
+module.exports = ticketMove;

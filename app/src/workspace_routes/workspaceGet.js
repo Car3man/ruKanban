@@ -16,7 +16,9 @@ const workspaceGet = async (req, res) => {
 
     const workspaces = await workspaceHelper.getWorkspacesByUserId(userId, startAt, limit);
 
-    const result = workspaces.map((x) => utils.escapeObjectBigInt(x));
+    const result = {
+      workspaces: workspaces.map((x) => utils.escapeObjectBigInt(x)),
+    };
     return responseHelper.sendOk(req, res, result);
   } catch (err) {
     console.log(err);

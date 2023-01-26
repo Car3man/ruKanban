@@ -23,7 +23,9 @@ const workspaceCreate = async (req, res) => {
       roleName: 'owner',
     }]);
 
-    const result = utils.escapeObjectBigInt(workspace);
+    const result = {
+      workspace: utils.escapeObjectBigInt(workspace),
+    };
     return responseHelper.sendOk(req, res, result);
   } catch (err) {
     console.error(err);
