@@ -189,6 +189,9 @@ async function getTicketsByColumnId(columnId, skip, take) {
       description: true,
       created_at: true,
     },
+    orderBy: [
+      { index: 'asc' },
+    ],
     skip,
     take,
   });
