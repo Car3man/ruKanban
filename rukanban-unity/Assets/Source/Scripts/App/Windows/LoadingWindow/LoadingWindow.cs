@@ -4,7 +4,7 @@ namespace RuKanban.App.Window
 {
     public class LoadingWindow : BaseAppWindow
     {
-        protected override void ShowWindow(bool force = false)
+        protected override void ShowWindow(bool force)
         {
             base.ShowWindow(force);
             

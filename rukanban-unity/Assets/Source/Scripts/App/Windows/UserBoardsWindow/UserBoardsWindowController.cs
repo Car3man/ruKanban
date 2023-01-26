@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using BestHTTP;
 using Newtonsoft.Json;
 using RuKanban.Services.Api;
-using RuKanban.Services.Api.JsonModel;
+using RuKanban.Services.Api.DatabaseModels;
+using RuKanban.Services.Api.Exceptions;
+using RuKanban.Services.Api.Response.Board;
 using UnityEngine;
 
 namespace RuKanban.App.Window
@@ -34,16 +36,16 @@ namespace RuKanban.App.Window
         {
             if (_window.IsActive())
             {
-                _window.Hide(true);
+                _window.Hide(true, true);
             }
             
             _workspaceId = workspaceId;
             
-            _window.Show();
+            _window.Show(false);
             
             var loadingWindow = AppManager.CreateAndShowWindow<LoadingWindow, LoadingWindowController>(AppManager.Windows.Root);
             
-            ApiRequest getBoardsRequest = AppManager.ApiService.GetBoards(workspaceId);
+            ApiRequest getBoardsRequest = AppManager.ApiService.Board.GetBoards(workspaceId);
             HTTPResponse getBoardsResponse;
 
             try { getBoardsResponse = await AppManager.AuthorizedApiCall(this, getBoardsRequest); }
@@ -61,18 +63,19 @@ namespace RuKanban.App.Window
             
             loadingWindow.DestroyWindow();
             
-            var getBoardsJsonResponse = JsonConvert.DeserializeObject<List<Board>>(getBoardsResponse.DataAsText)!;
+            var getBoardsJsonResponse = JsonConvert.DeserializeObject<GetBoardsRes>(getBoardsResponse.DataAsText)!;
 
             _window.header.backButton.onClick.AddListener(OnHeaderBackButtonClick);
             _window.header.settingsButton.onClick.AddListener(OnHeaderSettingsButtonClick); 
             _window.addUserBoardButton.onClick.AddListener(OnAddUserBoardButtonClick);
             _window.OnUserBoardItemButtonClick = OnUserBoardItemClick;
-            _window.SetUserBoards(getBoardsJsonResponse);
+            _window.SetUserBoards(new List<Board>(getBoardsJsonResponse.boards));
         }
 
         private void OnHeaderBackButtonClick()
         {
-            _window.Hide();
+            _window.Hide(false, true);
+            
             AppManager.GetReadyRootWindow<UserWorkspacesWindow, UserWorkspacesWindowController>().Open();
         }
         

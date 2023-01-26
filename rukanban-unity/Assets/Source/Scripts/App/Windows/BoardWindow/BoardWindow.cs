@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using RuKanban.Services.Api.JsonModel;
+using RuKanban.Services.Api.DatabaseModels;
 using RuKanban.Utils;
 using UnityEngine;
 using UnityEngine.UI;
@@ -17,7 +17,7 @@ namespace RuKanban.App.Window
         [SerializeField] private Transform itemParent;
         [SerializeField] private GameObject addColumnContainer;
 
-        private List<Column> _currColumns;
+        private Column[] _currColumns;
         private List<GameObject> _items;
 
         private bool _isCurrDragTicket;
@@ -34,7 +34,7 @@ namespace RuKanban.App.Window
         public Action<Column, ColumnItem> OnDeleteButtonClick;
         public Action<Column, ColumnItem> OnAddTicketButtonClick;
 
-        protected override void HideWindow(bool force = false)
+        protected override void HideWindow(bool force)
         {
             ResetElements();
             base.HideWindow(force);
@@ -45,7 +45,7 @@ namespace RuKanban.App.Window
             header.ResetElements();
             addColumnButton.onClick.RemoveAllListeners();
             itemTemplate.gameObject.SetActive(false);
-            SetColumns(new List<Column>());
+            SetColumns(Array.Empty<Column>());
             OnColumnTicketClick = null;
             OnColumnTicketMoveToAnotherColumn = null;
             OnDeleteButtonClick = null;
@@ -54,7 +54,7 @@ namespace RuKanban.App.Window
             _currDragTicket = default;
         }
 
-        public void SetColumns(List<Column> columns)
+        public void SetColumns(Column[] columns)
         {
             _currColumns = columns;
             

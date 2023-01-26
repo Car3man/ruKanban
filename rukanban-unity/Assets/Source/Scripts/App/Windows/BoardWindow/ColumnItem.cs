@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using RuKanban.Services.Api.JsonModel;
+using RuKanban.Services.Api.DatabaseModels;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;

@@ -45,7 +45,7 @@ namespace RuKanban.Window
             return gameObject.activeSelf;
         }
         
-        public void Show(bool force = false)
+        public void Show(bool force)
         {
             if (IsActive())
             {
@@ -56,7 +56,7 @@ namespace RuKanban.Window
             _controller?.OnWindowShow(this);
         }
 
-        public void Hide(bool force = false, bool recursive = true)
+        public void Hide(bool force, bool recursive)
         {
             if (recursive)
             {
@@ -80,12 +80,12 @@ namespace RuKanban.Window
             }
         }
 
-        protected virtual void ShowWindow(bool force = false)
+        protected virtual void ShowWindow(bool force)
         {
             gameObject.SetActive(true);
         }
 
-        protected virtual void HideWindow(bool force = false)
+        protected virtual void HideWindow(bool force)
         {
             gameObject.SetActive(false);
         }

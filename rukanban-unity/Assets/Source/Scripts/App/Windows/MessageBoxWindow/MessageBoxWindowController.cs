@@ -17,13 +17,13 @@ namespace RuKanban.App.Window
         {
             if (!_window.runtimeCreated && _window.IsActive())
             {
-                _window.Hide(true);
+                _window.Hide(true, true);
             }
             
             _window.titleText.text = title;
             _window.messageText.text = message;
             _window.okayButton.onClick.AddListener(() => okayButtonCallback?.Invoke());
-            _window.Show();
+            _window.Show(false);
         }
     }
 }

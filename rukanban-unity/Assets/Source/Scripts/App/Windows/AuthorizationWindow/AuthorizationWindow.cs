@@ -5,7 +5,7 @@
         public SignInTab signInTab;
         public SignUpTab signUpTab;
 
-        protected override void HideWindow(bool force = false)
+        protected override void HideWindow(bool force)
         {
             ResetElements();
             base.HideWindow(force);

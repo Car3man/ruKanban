@@ -11,7 +11,7 @@ namespace RuKanban.App.Window
         public Button deleteButton;
         public Button saveButton;
 
-        protected override void HideWindow(bool force = false)
+        protected override void HideWindow(bool force)
         {
             ResetElements();
             

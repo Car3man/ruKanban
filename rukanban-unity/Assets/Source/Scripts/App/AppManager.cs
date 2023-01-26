@@ -1,11 +1,11 @@
 ﻿using System;
-using System.Linq;
 using System.Threading.Tasks;
 using BestHTTP;
 using Newtonsoft.Json;
 using RuKanban.App.Window;
 using RuKanban.Services.Api;
-using RuKanban.Services.Api.Responses;
+using RuKanban.Services.Api.Exceptions;
+using RuKanban.Services.Api.Response.Auth;
 using RuKanban.Services.AppConfiguration;
 using RuKanban.Services.Authorization;
 using RuKanban.Services.Theme;
@@ -35,7 +35,7 @@ namespace RuKanban.App
             string windowsBaseResourcePath = isMobileVersion ? "Windows/Portrait" : "Windows/Landscape";
             Instantiate(Resources.Load<GameObject>($"{windowsBaseResourcePath}/Windows"), Windows.transform);
             Windows.Initialize(windowsBaseResourcePath);
-            Windows.Root.Show();
+            Windows.Root.Show(false);
         }
 
         public void HideAllWindows(bool force = false, bool includeRoot = false)
@@ -105,12 +105,12 @@ namespace RuKanban.App
                 
                 if (!string.IsNullOrEmpty(accessToken) && !string.IsNullOrEmpty(refreshToken))
                 {
-                    ApiRequest refreshTokensRequest = ApiService.RefreshTokens(refreshToken);
+                    ApiRequest refreshTokensRequest = ApiService.Auth.RefreshTokens(refreshToken);
                     refreshTokensRequest.AddHeader("Authorization", $"Bearer {accessToken}");
                     HTTPResponse refreshTokensResponse = await refreshTokensRequest.GetHTTPResponseAsync();
                     if (refreshTokensResponse.IsSuccess)
                     {
-                        var refreshTokensJsonResponse = JsonConvert.DeserializeObject<RefreshTokensResponse>(refreshTokensResponse.DataAsText);
+                        var refreshTokensJsonResponse = JsonConvert.DeserializeObject<RefreshTokensRes>(refreshTokensResponse.DataAsText);
                     
                         AuthorizationService.AuthorizationData = new AuthorizationData(
                             refreshTokensJsonResponse!.access_token,

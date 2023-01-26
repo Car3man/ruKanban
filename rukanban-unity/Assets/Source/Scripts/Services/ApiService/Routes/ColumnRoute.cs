@@ -1,0 +1,36 @@
+﻿using BestHTTP;
+using Newtonsoft.Json;
+using RuKanban.Services.Api.Request.Column;
+
+namespace RuKanban.Services.Api.Routes
+{
+    public class ColumnRoute : BaseRoute
+    {
+        public ColumnRoute(string basePath) : base(basePath)
+        {
+        }
+        
+        public ApiRequest GetColumns(string boardId)
+        {
+            var uri = GetUri($"/column.get?board_id={boardId}");
+            var request = new ApiRequest(uri, HTTPMethods.Post);
+            return request;
+        }
+        
+        public ApiRequest CreateColumn(string boardId, string name)
+        {
+            var uri = GetUri($"/column.create?board_id={boardId}");
+            var request = new ApiRequest(uri, HTTPMethods.Post);
+            var requestBody = new CreateColumnReqBody(name);
+            request.SetJsonBody(JsonConvert.SerializeObject(requestBody));
+            return request;
+        }
+        
+        public ApiRequest DeleteColumn(string columnId)
+        {
+            var uri = GetUri($"/column.delete?column_id={columnId}");
+            var request = new ApiRequest(uri, HTTPMethods.Post);
+            return request;
+        }
+    }
+}

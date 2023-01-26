@@ -1,11 +1,9 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using BestHTTP;
 using Newtonsoft.Json;
 using RuKanban.Services.Api;
-using RuKanban.Services.Api.Responses;
-using UnityEngine;
+using RuKanban.Services.Api.Exceptions;
+using RuKanban.Services.Api.Response.Column;
 
 namespace RuKanban.App.Window
 {
@@ -25,19 +23,19 @@ namespace RuKanban.App.Window
         {
             if (_window.IsActive())
             {
-                _window.Hide(true);
+                _window.Hide(true, true);
             }
             
             _boardId = boardId;
             
-            _window.Show();
+            _window.Show(false);
             _window.closeButton.onClick.AddListener(OnCloseButtonClick);
             _window.createButton.onClick.AddListener(OnCreateButtonClick);
         }
 
         private void OnCloseButtonClick()
         {
-            _window.Hide();
+            _window.Hide(false, true);
         }
 
         private async void OnCreateButtonClick()
@@ -45,7 +43,7 @@ namespace RuKanban.App.Window
             var loadingWindow = AppManager.CreateAndShowWindow<LoadingWindow, LoadingWindowController>(AppManager.Windows.Root);
 
             string columnName = _window.nameInput.text;
-            ApiRequest createColumnRequest = AppManager.ApiService.CreateColumn(_boardId, columnName);
+            ApiRequest createColumnRequest = AppManager.ApiService.Column.CreateColumn(_boardId, columnName);
             HTTPResponse createColumnResponse;
             
             try { createColumnResponse = await AppManager.AuthorizedApiCall(this, createColumnRequest); }
@@ -55,7 +53,7 @@ namespace RuKanban.App.Window
                 return;
             }
             
-            var createColumnJsonResponse = JsonConvert.DeserializeObject<CreateColumnResponse>(createColumnResponse.DataAsText)!;
+            var createColumnJsonResponse = JsonConvert.DeserializeObject<CreateColumnRes>(createColumnResponse.DataAsText)!;
             if (!createColumnResponse.IsSuccess)
             {
                 if (!string.IsNullOrEmpty(createColumnJsonResponse.error_msg))
@@ -77,7 +75,7 @@ namespace RuKanban.App.Window
             
             loadingWindow.DestroyWindow();
             
-            _window.Hide();
+            _window.Hide(false, true);
             AppManager.GetReadyRootWindow<BoardWindow, BoardWindowController>().Reopen();
         }
     }

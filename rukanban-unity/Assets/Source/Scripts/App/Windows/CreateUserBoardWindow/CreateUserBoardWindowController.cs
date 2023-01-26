@@ -2,7 +2,8 @@ using System;
 using BestHTTP;
 using Newtonsoft.Json;
 using RuKanban.Services.Api;
-using RuKanban.Services.Api.Responses;
+using RuKanban.Services.Api.Exceptions;
+using RuKanban.Services.Api.Response.Board;
 
 namespace RuKanban.App.Window
 {
@@ -22,19 +23,19 @@ namespace RuKanban.App.Window
         {
             if (_window.IsActive())
             {
-                _window.Hide(true);
+                _window.Hide(true, true);
             }
             
             _workspaceId = workspaceId;
             
-            _window.Show();
+            _window.Show(false);
             _window.closeButton.onClick.AddListener(OnCloseButtonClick);
             _window.createButton.onClick.AddListener(OnCreateButtonClick);
         }
 
         private void OnCloseButtonClick()
         {
-            _window.Hide();
+            _window.Hide(false, true);
         }
 
         private async void OnCreateButtonClick()
@@ -43,7 +44,7 @@ namespace RuKanban.App.Window
 
             string boardName = _window.nameInput.text;
             string boardDescription = _window.descriptionInput.text;
-            ApiRequest createBoardRequest = AppManager.ApiService.CreateBoard(_workspaceId, boardName, boardDescription);
+            ApiRequest createBoardRequest = AppManager.ApiService.Board.CreateBoard(_workspaceId, boardName, boardDescription);
             HTTPResponse createBoardResponse;
             
             try { createBoardResponse = await AppManager.AuthorizedApiCall(this, createBoardRequest); }
@@ -53,7 +54,7 @@ namespace RuKanban.App.Window
                 return;
             }
             
-            var createBoardJsonResponse = JsonConvert.DeserializeObject<CreateBoardResponse>(createBoardResponse.DataAsText)!;
+            var createBoardJsonResponse = JsonConvert.DeserializeObject<CreateBoardRes>(createBoardResponse.DataAsText)!;
             if (!createBoardResponse.IsSuccess)
             {
                 if (!string.IsNullOrEmpty(createBoardJsonResponse.error_msg))
@@ -75,8 +76,8 @@ namespace RuKanban.App.Window
             
             loadingWindow.DestroyWindow();
             
-            _window.Hide();
-            AppManager.GetReadyRootWindow<UserBoardsWindow, UserBoardsWindowController>().Open(createBoardJsonResponse.workspace_id);
+            _window.Hide(false, true);
+            AppManager.GetReadyRootWindow<UserBoardsWindow, UserBoardsWindowController>().Open(createBoardJsonResponse.board.workspace_id);
         }
     }
 }

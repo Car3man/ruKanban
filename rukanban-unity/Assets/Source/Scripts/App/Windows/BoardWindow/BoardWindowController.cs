@@ -3,7 +3,10 @@ using System.Collections.Generic;
 using BestHTTP;
 using Newtonsoft.Json;
 using RuKanban.Services.Api;
-using RuKanban.Services.Api.JsonModel;
+using RuKanban.Services.Api.DatabaseModels;
+using RuKanban.Services.Api.Exceptions;
+using RuKanban.Services.Api.Response.Column;
+using RuKanban.Services.Api.Response.Ticket;
 
 namespace RuKanban.App.Window
 {
@@ -36,18 +39,18 @@ namespace RuKanban.App.Window
         {
             if (_window.IsActive())
             {
-                _window.Hide(true);
+                _window.Hide(true, true);
             }
 
             _boardId = boardId;
             _boardColumns = new List<Column>();
             _boardTickets = new Dictionary<Column, List<Ticket>>();
             
-            _window.Show();
+            _window.Show(false);
             
             var loadingWindow = AppManager.CreateAndShowWindow<LoadingWindow, LoadingWindowController>(AppManager.Windows.Root);
             
-            ApiRequest getColumnsRequest = AppManager.ApiService.GetColumns(boardId);
+            ApiRequest getColumnsRequest = AppManager.ApiService.Column.GetColumns(boardId);
             HTTPResponse getColumnsResponse;
 
             try { getColumnsResponse = await AppManager.AuthorizedApiCall(this, getColumnsRequest); }
@@ -65,9 +68,9 @@ namespace RuKanban.App.Window
 
             loadingWindow.DestroyWindow();
 
-            var getColumnsJsonResponse = JsonConvert.DeserializeObject<List<Column>>(getColumnsResponse.DataAsText)!;
+            var getColumnsJsonResponse = JsonConvert.DeserializeObject<GetColumnsRes>(getColumnsResponse.DataAsText)!;
 
-            _boardColumns = new List<Column>(getColumnsJsonResponse);
+            _boardColumns = new List<Column>(getColumnsJsonResponse.columns);
             
             _window.header.backButton.onClick.AddListener(OnHeaderBackButtonClick);
             _window.header.settingsButton.onClick.AddListener(OnHeaderSettingsButtonClick);
@@ -77,12 +80,13 @@ namespace RuKanban.App.Window
             _window.OnDeleteButtonClick = OnDeleteButtonClick;
             _window.OnAddTicketButtonClick = OnAddTicketButtonClick;
             _window.addColumnButton.onClick.AddListener(OnAddColumnButtonClick);
-            _window.SetColumns(getColumnsJsonResponse);
+            _window.SetColumns(getColumnsJsonResponse.columns);
         }
 
         private void OnHeaderBackButtonClick()
         {
-            _window.Hide();
+            _window.Hide(false, true);
+            
             AppManager.GetReadyRootWindow<UserBoardsWindow, UserBoardsWindowController>().Reopen();
         }
 
@@ -93,7 +97,7 @@ namespace RuKanban.App.Window
 
         private async void OnColumnItemReady(Column column, ColumnItem columnItem)
         {
-            ApiRequest getTicketsRequest = AppManager.ApiService.GetTickets(column.id);
+            ApiRequest getTicketsRequest = AppManager.ApiService.Ticket.GetTickets(column.id);
             HTTPResponse getTicketsResponse;
 
             try { getTicketsResponse = await AppManager.AuthorizedApiCall(this, getTicketsRequest); }
@@ -109,11 +113,11 @@ namespace RuKanban.App.Window
                 return;
             }
 
-            var getTicketsJsonResponse = JsonConvert.DeserializeObject<List<Ticket>>(getTicketsResponse.DataAsText)!;
+            var getTicketsJsonResponse = JsonConvert.DeserializeObject<GetTicketsRes>(getTicketsResponse.DataAsText)!;
             
-            _boardTickets.Add(column, new List<Ticket>(getTicketsJsonResponse));
+            _boardTickets.Add(column, new List<Ticket>(getTicketsJsonResponse.tickets));
             
-            columnItem.SetTickets(getTicketsJsonResponse);
+            columnItem.SetTickets(new List<Ticket>(getTicketsJsonResponse.tickets));
         }
 
         private void OnAddColumnButtonClick()
@@ -128,7 +132,7 @@ namespace RuKanban.App.Window
 
         private async void OnDeleteButtonClick(Column column, ColumnItem columnItem)
         {
-            ApiRequest deleteColumnRequest = AppManager.ApiService.DeleteColumn(column.id);
+            ApiRequest deleteColumnRequest = AppManager.ApiService.Column.DeleteColumn(column.id);
             HTTPResponse deleteColumnResponse;
 
             try { deleteColumnResponse = await AppManager.AuthorizedApiCall(this, deleteColumnRequest); }
@@ -156,9 +160,9 @@ namespace RuKanban.App.Window
         {
             int newTicketIndex = _boardTickets[newColumn].Count;
             
-            ApiRequest moveTicketRequest = AppManager.ApiService.UpdateTicket(ticket.id, newColumn.id, newTicketIndex, null, null);
+            ApiRequest moveTicketRequest = AppManager.ApiService.Ticket.MoveTicket(ticket.id, newColumn.id, newTicketIndex);
             HTTPResponse moveTicketResponse;
-
+            
             try { moveTicketResponse = await AppManager.AuthorizedApiCall(this, moveTicketRequest); }
             catch (Exception exception) when (exception is not UnauthorizedApiRequest)
             {
@@ -171,7 +175,7 @@ namespace RuKanban.App.Window
                 AppManager.OnUnexpectedApiCallException(this, moveTicketRequest, null);
                 return;
             }
-
+            
             AppManager.GetReadyRootWindow<BoardWindow, BoardWindowController>().Reopen();
         }
     }

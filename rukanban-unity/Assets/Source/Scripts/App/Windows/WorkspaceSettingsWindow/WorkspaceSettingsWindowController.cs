@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using BestHTTP;
 using Newtonsoft.Json;
 using RuKanban.Services.Api;
-using RuKanban.Services.Api.JsonModel;
-using RuKanban.Services.Api.Responses;
+using RuKanban.Services.Api.DatabaseModels;
+using RuKanban.Services.Api.Exceptions;
+using RuKanban.Services.Api.Response.Workspace;
 
 namespace RuKanban.App.Window
 {
@@ -25,24 +26,24 @@ namespace RuKanban.App.Window
         {
             if (_window.IsActive())
             {
-                _window.Hide(true);
+                _window.Hide(true, true);
             }
 
             _workspaceId = workspaceId;
             
-            _window.Show();
+            _window.Show(false);
             
             var loadingWindow = AppManager.CreateAndShowWindow<LoadingWindow, LoadingWindowController>(AppManager.Windows.Root);
 
-            ApiRequest getWorkspaceRequest = AppManager.ApiService.GetWorkspace(workspaceId);
-            ApiRequest getWorkspaceUsersRequest = AppManager.ApiService.GetWorkspaceUsers(workspaceId);
-            HTTPResponse getWorkspaceResponse;
+            ApiRequest getWorkspaceByIdRequest = AppManager.ApiService.Workspace.GetWorkspaceById(workspaceId);
+            ApiRequest getWorkspaceUsersRequest = AppManager.ApiService.Workspace.GetWorkspaceUsers(workspaceId);
+            HTTPResponse getWorkspaceByIdResponse;
             HTTPResponse getWorkspaceUsersResponse;
             
-            try { getWorkspaceResponse = await AppManager.AuthorizedApiCall(this, getWorkspaceRequest); }
+            try { getWorkspaceByIdResponse = await AppManager.AuthorizedApiCall(this, getWorkspaceByIdRequest); }
             catch (Exception exception) when (exception is not UnauthorizedApiRequest)
             {
-                AppManager.OnUnexpectedApiCallException(this, getWorkspaceRequest, exception);
+                AppManager.OnUnexpectedApiCallException(this, getWorkspaceByIdRequest, exception);
                 return;
             }
             
@@ -53,7 +54,7 @@ namespace RuKanban.App.Window
                 return;
             }
 
-            if (!getWorkspaceResponse.IsSuccess || !getWorkspaceUsersResponse.IsSuccess)
+            if (!getWorkspaceByIdResponse.IsSuccess || !getWorkspaceUsersResponse.IsSuccess)
             {
                 AppManager.OnUnexpectedApiCallException(this, getWorkspaceUsersRequest, null);
                 return;
@@ -61,20 +62,20 @@ namespace RuKanban.App.Window
 
             loadingWindow.DestroyWindow();
 
-            var getWorkspaceJsonResponse = JsonConvert.DeserializeObject<Workspace>(getWorkspaceResponse.DataAsText)!;
-            var getWorkspaceUsersJsonResponse = JsonConvert.DeserializeObject<List<User>>(getWorkspaceUsersResponse.DataAsText)!;
+            var getWorkspaceByIdJsonResponse = JsonConvert.DeserializeObject<GetWorkspaceByIdRes>(getWorkspaceByIdResponse.DataAsText)!;
+            var getWorkspaceUsersJsonResponse = JsonConvert.DeserializeObject<GetWorkspaceUsersRes>(getWorkspaceUsersResponse.DataAsText)!;
 
             _window.closeButton.onClick.AddListener(OnCloseButtonClick);
-            _window.nameInput.text = getWorkspaceJsonResponse.name;
+            _window.nameInput.text = getWorkspaceByIdJsonResponse.workspace.name;
             _window.nameInput.onValueChanged.AddListener(OnNameInputChange);
-            _window.SetWorkspaceUsers(getWorkspaceUsersJsonResponse);
+            _window.SetWorkspaceUsers(getWorkspaceUsersJsonResponse.users);
             _window.OnUserItemDeleteButtonClick = OnUserItemDeleteButtonClick;
             _window.inviteUserButton.onClick.AddListener(OnInviteUserButtonClick);
         }
 
         private void OnCloseButtonClick()
         {
-            _window.Hide();
+            _window.Hide(false, true);
         }
 
         private void OnNameInputChange(string newName)
@@ -87,7 +88,8 @@ namespace RuKanban.App.Window
             var loadingWindow = AppManager.CreateAndShowWindow<LoadingWindow, LoadingWindowController>(AppManager.Windows.Root);
 
             string userToDelete = user.login;
-            ApiRequest updateWorkspaceRequest = AppManager.ApiService.UpdateWorkspace(_workspaceId, null, null, new [] {userToDelete});
+            ApiRequest updateWorkspaceRequest = AppManager.ApiService.Workspace
+                .UpdateWorkspace(_workspaceId, null, null, new [] {userToDelete});
             HTTPResponse updateWorkspaceResponse;
 
             try { updateWorkspaceResponse = await AppManager.AuthorizedApiCall(this, updateWorkspaceRequest); }
@@ -99,7 +101,7 @@ namespace RuKanban.App.Window
 
             if (!updateWorkspaceResponse.IsSuccess)
             {
-                var updateWorkspaceJsonResponse = JsonConvert.DeserializeObject<UpdateWorkspaceResponse>(updateWorkspaceResponse.DataAsText)!;
+                var updateWorkspaceJsonResponse = JsonConvert.DeserializeObject<UpdateWorkspaceRes>(updateWorkspaceResponse.DataAsText)!;
                 
                 if (!string.IsNullOrEmpty(updateWorkspaceJsonResponse.error_msg))
                 {
@@ -128,7 +130,8 @@ namespace RuKanban.App.Window
             var loadingWindow = AppManager.CreateAndShowWindow<LoadingWindow, LoadingWindowController>(AppManager.Windows.Root);
 
             string userToAdd = _window.inviteUserLoginInput.text;
-            ApiRequest updateWorkspaceRequest = AppManager.ApiService.UpdateWorkspace(_workspaceId, null, new [] {userToAdd}, null);
+            ApiRequest updateWorkspaceRequest = AppManager.ApiService.Workspace
+                .UpdateWorkspace(_workspaceId, null, new [] {userToAdd}, null);
             HTTPResponse updateWorkspaceResponse;
 
             try { updateWorkspaceResponse = await AppManager.AuthorizedApiCall(this, updateWorkspaceRequest); }
@@ -140,7 +143,7 @@ namespace RuKanban.App.Window
 
             if (!updateWorkspaceResponse.IsSuccess)
             {
-                var updateWorkspaceJsonResponse = JsonConvert.DeserializeObject<UpdateWorkspaceResponse>(updateWorkspaceResponse.DataAsText)!;
+                var updateWorkspaceJsonResponse = JsonConvert.DeserializeObject<UpdateWorkspaceRes>(updateWorkspaceResponse.DataAsText)!;
                 
                 if (!string.IsNullOrEmpty(updateWorkspaceJsonResponse.error_msg))
                 {

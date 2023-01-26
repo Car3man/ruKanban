@@ -19,24 +19,24 @@ namespace RuKanban.App.Window
         {
             if (_window.IsActive())
             {
-                _window.Hide(true);
+                _window.Hide(true, true);
             }
             
             _window.closeButton.onClick.AddListener(OnCloseButtonClick);
             _window.signOutButton.onClick.AddListener(OnSignOutButtonClick);
-            _window.Show();
+            _window.Show(false);
         }
 
         private void OnCloseButtonClick()
         {
-            _window.Hide();
+            _window.Hide(false, true);
         }
 
         private async void OnSignOutButtonClick()
         {
             var loadingWindow = AppManager.CreateAndShowWindow<LoadingWindow, LoadingWindowController>(AppManager.Windows.Root);
             
-            ApiRequest signOutRequest = AppManager.ApiService.SignOut();
+            ApiRequest signOutRequest = AppManager.ApiService.Auth.SignOut();
 
             try
             {

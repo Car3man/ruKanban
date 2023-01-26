@@ -2,7 +2,8 @@ using System;
 using BestHTTP;
 using Newtonsoft.Json;
 using RuKanban.Services.Api;
-using RuKanban.Services.Api.Responses;
+using RuKanban.Services.Api.Exceptions;
+using RuKanban.Services.Api.Response.Ticket;
 
 namespace RuKanban.App.Window
 {
@@ -22,19 +23,19 @@ namespace RuKanban.App.Window
         {
             if (_window.IsActive())
             {
-                _window.Hide(true);
+                _window.Hide(true, true);
             }
             
             _columnId = columnId;
             
-            _window.Show();
+            _window.Show(false);
             _window.closeButton.onClick.AddListener(OnCloseButtonClick);
             _window.createButton.onClick.AddListener(OnCreateButtonClick);
         }
 
         private void OnCloseButtonClick()
         {
-            _window.Hide();
+            _window.Hide(false, true);
         }
 
         private async void OnCreateButtonClick()
@@ -43,7 +44,7 @@ namespace RuKanban.App.Window
 
             string ticketTitle = _window.titleInput.text;
             string ticketDescription = _window.descriptionInput.text;
-            ApiRequest createTicketRequest = AppManager.ApiService.CreateTicket(_columnId, ticketTitle, ticketDescription);
+            ApiRequest createTicketRequest = AppManager.ApiService.Ticket.CreateTicket(_columnId, ticketTitle, ticketDescription);
             HTTPResponse createTicketResponse;
             
             try { createTicketResponse = await AppManager.AuthorizedApiCall(this, createTicketRequest); }
@@ -53,7 +54,7 @@ namespace RuKanban.App.Window
                 return;
             }
             
-            var createTicketJsonResponse = JsonConvert.DeserializeObject<CreateTicketResponse>(createTicketResponse.DataAsText)!;
+            var createTicketJsonResponse = JsonConvert.DeserializeObject<CreateTicketRes>(createTicketResponse.DataAsText)!;
             if (!createTicketResponse.IsSuccess)
             {
                 if (!string.IsNullOrEmpty(createTicketJsonResponse.error_msg))
@@ -75,7 +76,7 @@ namespace RuKanban.App.Window
             
             loadingWindow.DestroyWindow();
             
-            _window.Hide();
+            _window.Hide(false, true);
             AppManager.GetReadyRootWindow<BoardWindow, BoardWindowController>().Reopen();
         }
     }

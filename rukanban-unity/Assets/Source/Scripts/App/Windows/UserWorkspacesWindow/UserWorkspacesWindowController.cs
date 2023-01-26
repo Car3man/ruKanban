@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using BestHTTP;
 using Newtonsoft.Json;
 using RuKanban.Services.Api;
-using RuKanban.Services.Api.JsonModel;
+using RuKanban.Services.Api.DatabaseModels;
+using RuKanban.Services.Api.Exceptions;
+using RuKanban.Services.Api.Response.Workspace;
 
 namespace RuKanban.App.Window
 {
@@ -22,14 +24,14 @@ namespace RuKanban.App.Window
         {
             if (_window.IsActive())
             {
-                _window.Hide(true);
+                _window.Hide(true, true);
             }
             
-            _window.Show();
+            _window.Show(false);
             
             var loadingWindow = AppManager.CreateAndShowWindow<LoadingWindow, LoadingWindowController>(AppManager.Windows.Root);
             
-            ApiRequest getWorkspacesRequest = AppManager.ApiService.GetWorkspaces();
+            ApiRequest getWorkspacesRequest = AppManager.ApiService.Workspace.GetWorkspaces();
             HTTPResponse getWorkspacesResponse;
 
             try { getWorkspacesResponse = await AppManager.AuthorizedApiCall(this, getWorkspacesRequest); }
@@ -47,13 +49,13 @@ namespace RuKanban.App.Window
 
             loadingWindow.DestroyWindow();
 
-            var getWorkspacesJsonResponse = JsonConvert.DeserializeObject<List<Workspace>>(getWorkspacesResponse.DataAsText)!;
+            var getWorkspacesJsonResponse = JsonConvert.DeserializeObject<GetWorkspacesRes>(getWorkspacesResponse.DataAsText)!;
             
             _window.header.settingsButton.onClick.AddListener(OnHeaderSettingsButtonClick); 
             _window.OnUserWorkspaceItemButtonClick = OnUserWorkspaceItemClick;
             _window.OnUserWorkspaceItemSettingsButtonClick = OnUserWorkspaceItemSettingsButtonClick;
             _window.addUserWorkspaceButton.onClick.AddListener(OnAddUserWorkspaceButtonClick);
-            _window.SetUserWorkspaces(getWorkspacesJsonResponse);
+            _window.SetUserWorkspaces(new List<Workspace>(getWorkspacesJsonResponse.workspaces));
         }
 
         private void OnHeaderSettingsButtonClick()
@@ -63,7 +65,8 @@ namespace RuKanban.App.Window
         
         private void OnUserWorkspaceItemClick(Workspace userWorkspace)
         {
-            _window.Hide();
+            _window.Hide(false, true);
+            
             AppManager.GetReadyRootWindow<UserBoardsWindow, UserBoardsWindowController>().Open(userWorkspace.id);
         }
         

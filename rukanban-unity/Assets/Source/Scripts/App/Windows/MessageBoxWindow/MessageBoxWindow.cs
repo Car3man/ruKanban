@@ -9,7 +9,7 @@ namespace RuKanban.App.Window
         public TextMeshProUGUI messageText;
         public Button okayButton;
         
-        protected override void HideWindow(bool force = false)
+        protected override void HideWindow(bool force)
         {
             ResetElements();
             base.HideWindow(force);

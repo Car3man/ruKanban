@@ -10,7 +10,7 @@ namespace RuKanban.App.Window
         public Button closeButton;
         public Button createButton;
 
-        protected override void HideWindow(bool force = false)
+        protected override void HideWindow(bool force)
         {
             ResetElements();
             base.HideWindow(force);

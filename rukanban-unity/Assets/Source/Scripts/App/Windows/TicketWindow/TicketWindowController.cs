@@ -1,12 +1,9 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using BestHTTP;
 using Newtonsoft.Json;
 using RuKanban.Services.Api;
-using RuKanban.Services.Api.JsonModel;
-using RuKanban.Services.Api.Responses;
-using UnityEngine;
+using RuKanban.Services.Api.Exceptions;
+using RuKanban.Services.Api.Response.Ticket;
 
 namespace RuKanban.App.Window
 {
@@ -27,52 +24,52 @@ namespace RuKanban.App.Window
         {
             if (_window.IsActive())
             {
-                _window.Hide(true);
+                _window.Hide(true, true);
             }
 
             _ticketId = ticketId;
             
-            _window.Show();
+            _window.Show(false);
             
             var loadingWindow = AppManager.CreateAndShowWindow<LoadingWindow, LoadingWindowController>(AppManager.Windows.Root);
 
-            ApiRequest getTicketRequest = AppManager.ApiService.GetTicket(ticketId);
-            HTTPResponse getTicketResponse;
+            ApiRequest getTicketByIdRequest = AppManager.ApiService.Ticket.GetTicketById(ticketId);
+            HTTPResponse getTicketByIdResponse;
             
-            try { getTicketResponse = await AppManager.AuthorizedApiCall(this, getTicketRequest); }
+            try { getTicketByIdResponse = await AppManager.AuthorizedApiCall(this, getTicketByIdRequest); }
             catch (Exception exception) when (exception is not UnauthorizedApiRequest)
             {
-                AppManager.OnUnexpectedApiCallException(this, getTicketRequest, exception);
+                AppManager.OnUnexpectedApiCallException(this, getTicketByIdRequest, exception);
                 return;
             }
 
-            if (!getTicketResponse.IsSuccess)
+            if (!getTicketByIdResponse.IsSuccess)
             {
-                AppManager.OnUnexpectedApiCallException(this, getTicketRequest, null);
+                AppManager.OnUnexpectedApiCallException(this, getTicketByIdRequest, null);
                 return;
             }
 
             loadingWindow.DestroyWindow();
 
-            var getTicketJsonResponse = JsonConvert.DeserializeObject<Ticket>(getTicketResponse.DataAsText)!;
+            var getTicketByIdJsonResponse = JsonConvert.DeserializeObject<GetTicketByIdRes>(getTicketByIdResponse.DataAsText)!;
 
             _window.closeButton.onClick.AddListener(OnCloseButtonClick);
-            _window.titleInput.text = getTicketJsonResponse.title;
-            _window.descriptionInput.text = getTicketJsonResponse.description;
+            _window.titleInput.text = getTicketByIdJsonResponse.ticket.title;
+            _window.descriptionInput.text = getTicketByIdJsonResponse.ticket.description;
             _window.deleteButton.onClick.AddListener(OnTicketDeleteButtonClick);
             _window.saveButton.onClick.AddListener(OnTicketSaveButtonClick);
         }
 
         private void OnCloseButtonClick()
         {
-            _window.Hide();
+            _window.Hide(false, true);
         }
 
         private async void OnTicketDeleteButtonClick()
         {
             var loadingWindow = AppManager.CreateAndShowWindow<LoadingWindow, LoadingWindowController>(AppManager.Windows.Root);
             
-            ApiRequest deleteTicketRequest = AppManager.ApiService.DeleteTicket(_ticketId);
+            ApiRequest deleteTicketRequest = AppManager.ApiService.Ticket.DeleteTicket(_ticketId);
             HTTPResponse deleteTicketResponse;
 
             try { deleteTicketResponse = await AppManager.AuthorizedApiCall(this, deleteTicketRequest); }
@@ -84,7 +81,7 @@ namespace RuKanban.App.Window
 
             if (!deleteTicketResponse.IsSuccess)
             {
-                var deleteTicketJsonResponse = JsonConvert.DeserializeObject<BaseResponse>(deleteTicketResponse.DataAsText)!;
+                var deleteTicketJsonResponse = JsonConvert.DeserializeObject<DeleteTicketRes>(deleteTicketResponse.DataAsText)!;
                 
                 if (!string.IsNullOrEmpty(deleteTicketJsonResponse.error_msg))
                 {
@@ -105,7 +102,7 @@ namespace RuKanban.App.Window
             
             loadingWindow.DestroyWindow();
             
-            _window.Hide();
+            _window.Hide(false, true);
             
             AppManager.GetReadyRootWindow<BoardWindow, BoardWindowController>().Reopen();
         }
@@ -113,43 +110,75 @@ namespace RuKanban.App.Window
         private async void OnTicketSaveButtonClick()
         {
             var loadingWindow = AppManager.CreateAndShowWindow<LoadingWindow, LoadingWindowController>(AppManager.Windows.Root);
-
+            
             string newTitle = _window.titleInput.text;
             string newDescription = _window.descriptionInput.text;
-            ApiRequest updateTicketRequest = AppManager.ApiService.UpdateTicket(_ticketId, null, null, newTitle, newDescription);
-            HTTPResponse updateTicketResponse;
-
-            try { updateTicketResponse = await AppManager.AuthorizedApiCall(this, updateTicketRequest); }
+            
+            ApiRequest changeTicketTitleRequest = AppManager.ApiService.Ticket.ChangeTitle(_ticketId, newTitle);
+            ApiRequest changeTicketDescriptionRequest = AppManager.ApiService.Ticket.ChangeDescription(_ticketId, newDescription);
+            
+            HTTPResponse changeTicketTitleResponse;
+            HTTPResponse changeTicketDescriptionResponse;
+            
+            try { changeTicketTitleResponse = await AppManager.AuthorizedApiCall(this, changeTicketTitleRequest); }
             catch (Exception exception) when (exception is not UnauthorizedApiRequest)
             {
-                AppManager.OnUnexpectedApiCallException(this, updateTicketRequest, exception);
+                AppManager.OnUnexpectedApiCallException(this, changeTicketTitleRequest, exception);
                 return;
             }
-
-            if (!updateTicketResponse.IsSuccess)
+            
+            try { changeTicketDescriptionResponse = await AppManager.AuthorizedApiCall(this, changeTicketDescriptionRequest); }
+            catch (Exception exception) when (exception is not UnauthorizedApiRequest)
             {
-                var updateTicketJsonResponse = JsonConvert.DeserializeObject<BaseResponse>(updateTicketResponse.DataAsText)!;
+                AppManager.OnUnexpectedApiCallException(this, changeTicketDescriptionRequest, exception);
+                return;
+            }
+            
+            if (!changeTicketTitleResponse.IsSuccess)
+            {
+                var changeTicketTitleJsonResponse = JsonConvert.DeserializeObject<ChangeTicketTitleRes>(changeTicketTitleResponse.DataAsText)!;
                 
-                if (!string.IsNullOrEmpty(updateTicketJsonResponse.error_msg))
+                if (!string.IsNullOrEmpty(changeTicketTitleJsonResponse.error_msg))
                 {
                     loadingWindow.DestroyWindow();
                     
                     var messageBoxWindow = AppManager.CreateWindow<MessageBoxWindow>(AppManager.Windows.Root);
                     var messageBoxWindowController = new MessageBoxWindowController(AppManager, messageBoxWindow);
-                    messageBoxWindowController.Open("Oops!", updateTicketJsonResponse.error_msg, () =>
+                    messageBoxWindowController.Open("Oops!", changeTicketTitleJsonResponse.error_msg, () =>
                     {
                         messageBoxWindow.DestroyWindow();
                     });
                     return;
                 }
                 
-                AppManager.OnUnexpectedApiCallException(this, updateTicketRequest, null);
+                AppManager.OnUnexpectedApiCallException(this, changeTicketDescriptionRequest, null);
+                return;
+            }
+            
+            if (!changeTicketDescriptionResponse.IsSuccess)
+            {
+                var changeTicketDescriptionJsonResponse = JsonConvert.DeserializeObject<ChangeTicketDescriptionRes>(changeTicketDescriptionResponse.DataAsText)!;
+                
+                if (!string.IsNullOrEmpty(changeTicketDescriptionJsonResponse.error_msg))
+                {
+                    loadingWindow.DestroyWindow();
+                    
+                    var messageBoxWindow = AppManager.CreateWindow<MessageBoxWindow>(AppManager.Windows.Root);
+                    var messageBoxWindowController = new MessageBoxWindowController(AppManager, messageBoxWindow);
+                    messageBoxWindowController.Open("Oops!", changeTicketDescriptionJsonResponse.error_msg, () =>
+                    {
+                        messageBoxWindow.DestroyWindow();
+                    });
+                    return;
+                }
+                
+                AppManager.OnUnexpectedApiCallException(this, changeTicketDescriptionRequest, null);
                 return;
             }
             
             loadingWindow.DestroyWindow();
             
-            _window.Hide();
+            _window.Hide(false, true);
             
             AppManager.GetReadyRootWindow<BoardWindow, BoardWindowController>().Reopen();
         }

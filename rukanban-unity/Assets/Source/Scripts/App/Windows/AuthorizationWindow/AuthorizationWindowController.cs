@@ -2,7 +2,7 @@
 using BestHTTP;
 using Newtonsoft.Json;
 using RuKanban.Services.Api;
-using RuKanban.Services.Api.Responses;
+using RuKanban.Services.Api.Response.Auth;
 using RuKanban.Services.Authorization;
 
 namespace RuKanban.App.Window
@@ -25,10 +25,10 @@ namespace RuKanban.App.Window
         {
             if (_window.IsActive())
             {
-                _window.Hide(true);
+                _window.Hide(true, true);
             }
             
-            _window.Show(true);
+            _window.Show(false);
             
             SignInTab.gameObject.SetActive(false);
             SignUpTab.gameObject.SetActive(false);
@@ -66,7 +66,7 @@ namespace RuKanban.App.Window
             string login = SignInTab.loginInput.text;
             string password = SignInTab.passwordInput.text;
             
-            ApiRequest signInRequest = AppManager.ApiService.SignIn(login, password);
+            ApiRequest signInRequest = AppManager.ApiService.Auth.SignIn(login, password);
             HTTPResponse signInResponse;
 
             try { signInResponse = await signInRequest.GetHTTPResponseAsync(); }
@@ -76,7 +76,7 @@ namespace RuKanban.App.Window
                 return;
             }
 
-            var signInJsonResponse = JsonConvert.DeserializeObject<SignInResponse>(signInResponse.DataAsText)!;
+            var signInJsonResponse = JsonConvert.DeserializeObject<SignInRes>(signInResponse.DataAsText)!;
             if (!signInResponse.IsSuccess)
             {
                 if (!string.IsNullOrEmpty(signInJsonResponse.error_msg))
@@ -120,7 +120,7 @@ namespace RuKanban.App.Window
             {
                 return;
             }
-            ;
+            
             SignUpTab.signInButton.onClick.AddListener(SignUpWindow_OnSignInButtonClick);
             SignUpTab.signUpButton.onClick.AddListener(SignUpWindow_OnSignUpButtonClick);
             SignUpTab.gameObject.SetActive(true);
@@ -141,7 +141,7 @@ namespace RuKanban.App.Window
             string surName = SignUpTab.surNameInput.text;
             string patronymic = SignUpTab.patronymicInput.text;
             
-            ApiRequest signUpRequest = AppManager.ApiService.SignUp(login, password, firstName, surName, patronymic);
+            ApiRequest signUpRequest = AppManager.ApiService.Auth.SignUp(login, password, firstName, surName, patronymic);
             HTTPResponse signUpResponse;
             
             try { signUpResponse = await signUpRequest.GetHTTPResponseAsync(); }
@@ -151,7 +151,7 @@ namespace RuKanban.App.Window
                 return;
             }
 
-            var signUpJsonResponse = JsonConvert.DeserializeObject<SignUpResponse>(signUpResponse.DataAsText)!;
+            var signUpJsonResponse = JsonConvert.DeserializeObject<SignUpRes>(signUpResponse.DataAsText)!;
             if (!signUpResponse.IsSuccess)
             {
                 if (!string.IsNullOrEmpty(signUpJsonResponse.error_msg))
@@ -185,7 +185,8 @@ namespace RuKanban.App.Window
 
         private void GoToMainAppWindow()
         {
-            _window.Hide();
+            _window.Hide(false, true);
+            
             AppManager.GetReadyRootWindow<UserWorkspacesWindow, UserWorkspacesWindowController>().Open();
         }
     }

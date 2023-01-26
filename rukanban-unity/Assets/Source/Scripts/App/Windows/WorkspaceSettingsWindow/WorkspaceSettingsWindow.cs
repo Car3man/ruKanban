@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using RuKanban.Services.Api.JsonModel;
+using RuKanban.Services.Api.DatabaseModels;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -22,7 +22,7 @@ namespace RuKanban.App.Window
 
         public Action<User> OnUserItemDeleteButtonClick;
 
-        protected override void HideWindow(bool force = false)
+        protected override void HideWindow(bool force)
         {
             ResetElements();
             
@@ -36,11 +36,11 @@ namespace RuKanban.App.Window
             inviteUserLoginInput.text = string.Empty;
             inviteUserButton.onClick.RemoveAllListeners();
             itemTemplate.gameObject.SetActive(false);
-            SetWorkspaceUsers(new List<User>());
+            SetWorkspaceUsers(Array.Empty<User>());
             OnUserItemDeleteButtonClick = null;
         }
 
-        public void SetWorkspaceUsers(List<User> users)
+        public void SetWorkspaceUsers(User[] users)
         {
             if (_items != null)
             {

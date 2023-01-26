@@ -2,7 +2,8 @@ using System;
 using BestHTTP;
 using Newtonsoft.Json;
 using RuKanban.Services.Api;
-using RuKanban.Services.Api.Responses;
+using RuKanban.Services.Api.Exceptions;
+using RuKanban.Services.Api.Response.Workspace;
 
 namespace RuKanban.App.Window
 {
@@ -21,17 +22,17 @@ namespace RuKanban.App.Window
         {
             if (_window.IsActive())
             {
-                _window.Hide(true);
+                _window.Hide(true, true);
             }
             
-            _window.Show();
+            _window.Show(false);
             _window.closeButton.onClick.AddListener(OnCloseButtonClick);
             _window.createButton.onClick.AddListener(OnCreateButtonClick);
         }
 
         private void OnCloseButtonClick()
         {
-            _window.Hide();
+            _window.Hide(false, true);
         }
 
         private async void OnCreateButtonClick()
@@ -39,7 +40,7 @@ namespace RuKanban.App.Window
             var loadingWindow = AppManager.CreateAndShowWindow<LoadingWindow, LoadingWindowController>(AppManager.Windows.Root);
 
             string workspaceName = _window.nameInput.text;
-            ApiRequest createWorkspaceRequest = AppManager.ApiService.CreateWorkspace(workspaceName);
+            ApiRequest createWorkspaceRequest = AppManager.ApiService.Workspace.CreateWorkspace(workspaceName);
             HTTPResponse createWorkspaceResponse;
 
             try { createWorkspaceResponse = await AppManager.AuthorizedApiCall(this, createWorkspaceRequest); }
@@ -49,7 +50,7 @@ namespace RuKanban.App.Window
                 return;
             }
 
-            var createWorkspaceJsonResponse = JsonConvert.DeserializeObject<CreateWorkspaceResponse>(createWorkspaceResponse.DataAsText)!;
+            var createWorkspaceJsonResponse = JsonConvert.DeserializeObject<CreateWorkspaceRes>(createWorkspaceResponse.DataAsText)!;
             if (!createWorkspaceResponse.IsSuccess)
             {
                 loadingWindow.DestroyWindow();
@@ -58,7 +59,7 @@ namespace RuKanban.App.Window
                 {
                     var messageBoxWindow = AppManager.CreateWindow<MessageBoxWindow>(_window);
                     var messageBoxWindowController = new MessageBoxWindowController(AppManager, messageBoxWindow);
-                    messageBoxWindowController.Open("Oops!", createWorkspaceJsonResponse?.error_msg, () =>
+                    messageBoxWindowController.Open("Oops!", createWorkspaceJsonResponse.error_msg, () =>
                     {
                         messageBoxWindow.DestroyWindow();
                     });
@@ -71,7 +72,7 @@ namespace RuKanban.App.Window
             
             loadingWindow.DestroyWindow();
             
-            _window.Hide();
+            _window.Hide(false, true);
             AppManager.GetReadyRootWindow<UserWorkspacesWindow, UserWorkspacesWindowController>().Open();
         }
     }

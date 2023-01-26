@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using RuKanban.Services.Api.JsonModel;
+using RuKanban.Services.Api.DatabaseModels;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -19,7 +19,7 @@ namespace RuKanban.App.Window
         public Action<Workspace> OnUserWorkspaceItemButtonClick;
         public Action<Workspace> OnUserWorkspaceItemSettingsButtonClick;
 
-        protected override void HideWindow(bool force = false)
+        protected override void HideWindow(bool force)
         {
             ResetElements();
             base.HideWindow(force);
