@@ -1,3 +1,6 @@
+/* eslint-disable no-await-in-loop */
+/* eslint-disable no-restricted-syntax */
+
 const { PrismaClient } = require('@prisma/client');
 
 const prisma = new PrismaClient();
@@ -126,18 +129,25 @@ async function changeTicketDescription(ticketId, description) {
  */
 async function moveTicket(ticketId, columnId, index) {
   return prisma.$transaction(async (tx) => {
-    const currentColumnId = (await tx.tickets.findFirst({
-      where: { id: ticketId },
-      select: { column_id: true },
-    })).column_id;
+    const ticketsToUpdate = await tx.tickets.findMany({
+      where: {
+        column_id: columnId,
+        index: {
+          gte: index,
+        },
+      },
+      select: { id: true },
+      orderBy: [
+        {
+          index: 'desc',
+        },
+      ],
+    });
 
-    if (columnId !== currentColumnId) {
-      await tx.tickets.updateMany({
+    for (const ticketToUpdate of ticketsToUpdate) {
+      await tx.tickets.update({
         where: {
-          column_id: columnId,
-          index: {
-            gte: index,
-          },
+          id: ticketToUpdate.id,
         },
         data: {
           index: {
