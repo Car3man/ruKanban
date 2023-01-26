@@ -7,6 +7,7 @@ using RuKanban.Services.Api.DatabaseModels;
 using RuKanban.Services.Api.Exceptions;
 using RuKanban.Services.Api.Response.Column;
 using RuKanban.Services.Api.Response.Ticket;
+using UnityEngine;
 
 namespace RuKanban.App.Window
 {
@@ -156,11 +157,9 @@ namespace RuKanban.App.Window
             AppManager.GetReadyRootWindow<CreateTicketWindow, CreateTicketWindowController>().Open(column.id);
         }
 
-        private async void OnColumnTicketMoveToAnotherColumn(Column newColumn, Ticket ticket)
+        private async void OnColumnTicketMoveToAnotherColumn(Column newColumn, Ticket ticket, int index)
         {
-            int newTicketIndex = _boardTickets[newColumn].Count;
-            
-            ApiRequest moveTicketRequest = AppManager.ApiService.Ticket.MoveTicket(ticket.id, newColumn.id, newTicketIndex);
+            ApiRequest moveTicketRequest = AppManager.ApiService.Ticket.MoveTicket(ticket.id, newColumn.id, index);
             HTTPResponse moveTicketResponse;
             
             try { moveTicketResponse = await AppManager.AuthorizedApiCall(this, moveTicketRequest); }

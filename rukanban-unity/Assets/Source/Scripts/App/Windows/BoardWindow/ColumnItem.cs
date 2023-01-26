@@ -12,13 +12,14 @@ namespace RuKanban.App.Window
         public TextMeshProUGUI nameText;
         public Button deleteButton;
         public Button addTicketButton;
-
+        
         [SerializeField] private TicketItem itemTemplate;
         [SerializeField] private Transform itemParent;
-        [SerializeField] private Image highlightOverlay;
-
-        private List<Ticket> _currTickets;
-        private List<TicketItem> _items;
+        [SerializeField] private TicketItemPlaceholder itemPlaceholder;
+        public Transform TicketItemsParent => itemParent;
+        
+        public List<Ticket> currTickets;
+        public List<TicketItem> currTicketItems;
 
         public Action<Ticket> OnTicketItemClick;
         public Action<Ticket, TicketItem> OnTicketItemDrag;
@@ -36,28 +37,29 @@ namespace RuKanban.App.Window
             OnTicketItemDrag = null;
             OnTicketItemBeginDrag = null;
             OnTicketItemEndDrag = null;
-            highlightOverlay.gameObject.SetActive(false);
+            itemPlaceholder.gameObject.SetActive(false);
         }
         
         public void SetTickets(List<Ticket> tickets)
         {
-            _currTickets = tickets;
+            currTickets = tickets;
             
-            if (_items != null)
+            if (currTicketItems != null)
             {
-                foreach (TicketItem item in _items)
+                foreach (TicketItem item in currTicketItems)
                 {
                     Destroy(item.gameObject);
                 }
             }
 
-            _items = new List<TicketItem>();
+            currTicketItems = new List<TicketItem>();
             
             foreach (Ticket ticket in tickets)
             {
                 TicketItem ticketItem = Instantiate(itemTemplate, itemParent);
                 ticketItem.gameObject.SetActive(true);
 
+                ticketItem.currTicket = ticket;
                 ticketItem.itemButton.onClick.AddListener(() =>
                 {
                     if (ticketItem.IsDragging)
@@ -72,24 +74,27 @@ namespace RuKanban.App.Window
                 ticketItem.OnEndDrag = item => OnTicketItemEndDrag?.Invoke(ticket, item);
                 ticketItem.titleText.text = ticket.title;
 
-                _items.Add(ticketItem);
+                currTicketItems.Add(ticketItem);
             }
         }
 
-        public void SetHighlighted(bool value)
+        public void SetTicketPlaceholderActive(bool value, int index = 0, float height = 35)
         {
-            highlightOverlay.gameObject.SetActive(value);
+            itemPlaceholder.gameObject.SetActive(value);
+            itemPlaceholder.transform.SetSiblingIndex(index);
+            itemPlaceholder.SetHeight(height);
         }
 
-        public void TakeTicket(Ticket ticket, TicketItem ticketItem)
+        public void TakeTicket(Ticket ticket, TicketItem ticketItem, int index)
         {
             ticketItem.transform.SetParent(itemParent);
+            ticketItem.transform.SetSiblingIndex(index);
             ticketItem.itemButton.onClick.AddListener(() => OnTicketItemClick?.Invoke(ticket));
             ticketItem.OnDrag = item => OnTicketItemDrag?.Invoke(ticket, item);
             ticketItem.OnBeginDrag = item => OnTicketItemBeginDrag?.Invoke(ticket, item);
             ticketItem.OnEndDrag = item => OnTicketItemEndDrag?.Invoke(ticket, item);
             
-            _items.Add(ticketItem);
+            currTicketItems.Add(ticketItem);
         }
     }
 }

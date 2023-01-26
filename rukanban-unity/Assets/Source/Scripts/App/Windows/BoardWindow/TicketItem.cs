@@ -1,4 +1,5 @@
 ﻿using System;
+using RuKanban.Services.Api.DatabaseModels;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -12,11 +13,14 @@ namespace RuKanban.App.Window
         public TextMeshProUGUI titleText;
         public RectTransform overlapTrigger;
 
+        public Ticket currTicket;
+        
         public Action<TicketItem> OnDrag;
         public Action<TicketItem> OnBeginDrag;
         public Action<TicketItem> OnEndDrag;
 
         public bool IsDragging { get; private set; }
+        public float Height => GetComponent<RectTransform>().rect.height;
 
         public void HandleOnDrag(BaseEventData eventData)
         {

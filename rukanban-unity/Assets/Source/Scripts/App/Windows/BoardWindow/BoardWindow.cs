@@ -30,7 +30,7 @@ namespace RuKanban.App.Window
 
         public Action<Column, ColumnItem> OnColumnItemReady;
         public Action<Column, Ticket> OnColumnTicketClick;
-        public Action<Column, Ticket> OnColumnTicketMoveToAnotherColumn;
+        public Action<Column, Ticket, int> OnColumnTicketMoveToAnotherColumn;
         public Action<Column, ColumnItem> OnDeleteButtonClick;
         public Action<Column, ColumnItem> OnAddTicketButtonClick;
 
@@ -97,9 +97,11 @@ namespace RuKanban.App.Window
         {
             if (_isCurrDragTicket)
             {
-                var dragTicketOverlapTrigger = _currDragTicket.Item4.overlapTrigger;
+                TicketItem dragTicket = _currDragTicket.Item4;
                 
-                var dragTicketRT = _currDragTicket.Item4.GetComponent<RectTransform>();
+                var dragTicketOverlapTrigger = dragTicket.overlapTrigger;
+                
+                var dragTicketRT = dragTicket.GetComponent<RectTransform>();
                 dragTicketRT.anchorMin = Vector2.one / 2f;
                 dragTicketRT.anchorMax = Vector2.one / 2f;
                 RectTransformUtility.ScreenPointToLocalPointInRectangle(dragAndDropParent, Input.mousePosition,
@@ -111,11 +113,18 @@ namespace RuKanban.App.Window
                     var anotherColumnItem = columnContainer.GetComponentInChildren<ColumnItem>();
                     var anotherColumnItemRT = anotherColumnItem.GetComponent<RectTransform>();
                     bool isOverColumn = dragTicketOverlapTrigger.Overlaps(anotherColumnItemRT);
-                    anotherColumnItem.SetHighlighted(isOverColumn);
 
                     if (isOverColumn)
                     {
+                        if (_currDragTicketColumnOver != null)
+                        {
+                            _currDragTicketColumnOver.SetTicketPlaceholderActive(false);
+                        }
+                        
+                        CalculateTicketIndexInColumn(dragTicket, anotherColumnItem, false, out var siblingIndex, out _);
+
                         _currDragTicketColumnOver = anotherColumnItem;
+                        _currDragTicketColumnOver.SetTicketPlaceholderActive(true, siblingIndex, ticketItem.Height);
                     }
                 }
             }
@@ -142,17 +151,10 @@ namespace RuKanban.App.Window
         {
             if (_isCurrDragTicket)
             {
-                foreach (GameObject columnContainer in _items)
-                {
-                    var anotherColumnItem = columnContainer.GetComponentInChildren<ColumnItem>();
-                    anotherColumnItem.SetHighlighted(false);
-                }
-                
-                var dragTicketRT = _currDragTicket.Item4.GetComponent<RectTransform>();
-                dragTicketRT.anchorMin = _currDragTicketOldAnchorMin;
-                dragTicketRT.anchorMax = _currDragTicketOldAnchorMax;
+                var dragTicket = _currDragTicket.Item4;
+                var dragTicketRT = dragTicket.GetComponent<RectTransform>();
 
-                if (_currDragTicketColumnOver == null || _currDragTicketColumnOver == previousColumnItem)
+                if (_currDragTicketColumnOver == null)
                 {
                     dragTicketRT.SetParent(_currDragTicketOldParent);
                     dragTicketRT.SetSiblingIndex(_currDragTicketOldSiblingIndex);
@@ -161,12 +163,59 @@ namespace RuKanban.App.Window
                 {
                     int overColumnIndex = _items.IndexOf(_currDragTicketColumnOver.transform.parent.gameObject);
                     Column overColumn = _currColumns[overColumnIndex];
-                    _currDragTicketColumnOver.TakeTicket(_currDragTicket.Item3, _currDragTicket.Item4);
-                    OnColumnTicketMoveToAnotherColumn?.Invoke(overColumn, _currDragTicket.Item3);
+                    
+                    CalculateTicketIndexInColumn(dragTicket, _currDragTicketColumnOver, true, out var siblingIndex, out var index);
+                    
+                    _currDragTicketColumnOver.TakeTicket(_currDragTicket.Item3, _currDragTicket.Item4, siblingIndex);
+                    OnColumnTicketMoveToAnotherColumn?.Invoke(overColumn, _currDragTicket.Item3, index);
+                }
+                
+                dragTicketRT.anchorMin = _currDragTicketOldAnchorMin;
+                dragTicketRT.anchorMax = _currDragTicketOldAnchorMax;
+
+                foreach (GameObject columnContainer in _items)
+                {
+                    var anotherColumnItem = columnContainer.GetComponentInChildren<ColumnItem>();
+                    anotherColumnItem.SetTicketPlaceholderActive(false);
                 }
 
                 _currDragTicket = default;
                 _isCurrDragTicket = false;
+            }
+        }
+
+        private void CalculateTicketIndexInColumn(TicketItem ticketItem, ColumnItem columnItem, bool b, out int siblingIndex, out int index)
+        {
+            var ticketItemRT = ticketItem.GetComponent<RectTransform>();
+            var ticketItemParentRT = columnItem.TicketItemsParent.GetComponent<RectTransform>();
+
+            var ticketItemWorldCorners = new Vector3[4];
+            ticketItemRT.GetWorldCorners(ticketItemWorldCorners);
+            
+            var ticketItemParentWorldCorners = new Vector3[4];
+            ticketItemParentRT.GetWorldCorners(ticketItemParentWorldCorners);
+
+            float ticketCenter = (ticketItemWorldCorners[0].y + ticketItemWorldCorners[1].y) / 2f;
+            
+            siblingIndex = 0;
+            index = 0;
+            
+            for (var i = columnItem.currTicketItems.Count - 1; i >= 0; i--)
+            {
+                var columnTicketItem = columnItem.currTicketItems[i];
+                var columnTicketItemRT = columnTicketItem.GetComponent<RectTransform>();
+                
+                var columnTicketItemWorldCorners = new Vector3[4];
+                columnTicketItemRT.GetWorldCorners(columnTicketItemWorldCorners);
+
+                float columnTicketItemCenter = (columnTicketItemWorldCorners[0].y + columnTicketItemWorldCorners[1].y) / 2f;
+
+                if (ticketCenter < columnTicketItemCenter)
+                {
+                    siblingIndex = columnTicketItemRT.GetSiblingIndex();
+                    index = columnTicketItem.currTicket.index + 1;
+                    break;
+                }
             }
         }
     }
