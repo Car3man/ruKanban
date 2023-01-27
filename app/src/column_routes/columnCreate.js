@@ -10,12 +10,12 @@ const columnCreate = async (req, res) => {
   try {
     const { userId } = req;
     const boardId = BigInt(req.query.board_id);
-    const { name } = req.body;
+    const { title } = req.body;
 
-    const nameValidationResult = columnHelper.isColumnNameValid(name);
-    if (!nameValidationResult.isValid) {
+    const titleValidationResult = columnHelper.isColumnTitleValid(title);
+    if (!titleValidationResult.isValid) {
       return responseHelper.sendBadRequest(req, res, {
-        error_msg: nameValidationResult.details,
+        error_msg: titleValidationResult.details,
       });
     }
 
@@ -26,7 +26,7 @@ const columnCreate = async (req, res) => {
       return responseHelper.sendForbidden(req, res);
     }
 
-    const column = await columnHelper.createColumn(boardId, name);
+    const column = await columnHelper.createColumn(boardId, title);
 
     const result = {
       column: utils.escapeObjectBigInt(column),

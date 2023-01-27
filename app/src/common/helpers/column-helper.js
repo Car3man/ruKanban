@@ -6,21 +6,21 @@ const prisma = new PrismaClient();
  * @typedef {Object} ValidationResult
  * @property {Boolean} isValid
  * @property {String|Undefined} details
- * @param {String} name
+ * @param {String} title
  * @returns {ValidationResult}
  */
-function isColumnNameValid(name) {
-  if (typeof name !== 'string') {
-    return { isValid: false, details: 'Name type should be a String.' };
+function isColumnTitleValid(title) {
+  if (typeof title !== 'string') {
+    return { isValid: false, details: 'Title type should be a String.' };
   }
 
-  const trimmedName = name.trim();
-  if (trimmedName.length < 1) {
-    return { isValid: false, details: 'Name length should be greater than 1.' };
+  const trimmedTitle = title.trim();
+  if (trimmedTitle.length < 1) {
+    return { isValid: false, details: 'Title length should be greater or equal than 1.' };
   }
 
-  if (trimmedName.length > 36) {
-    return { isValid: false, details: 'Name length should be less or equals than 36' };
+  if (trimmedTitle.length > 36) {
+    return { isValid: false, details: 'Title length should be less or equals than 36' };
   }
 
   return { isValid: true };
@@ -56,17 +56,17 @@ async function getNextColumnIndex(boardId) {
 /**
  * @async
  * @param {BigInt} boardId
- * @param {String} name
+ * @param {String} title
  * @returns {import('@prisma/client').columns}
  */
-async function createColumn(boardId, name) {
+async function createColumn(boardId, title) {
   const index = await getNextColumnIndex(boardId);
 
   return prisma.columns.create({
     data: {
       board_id: boardId,
       index,
-      name,
+      name: title,
       created_at: new Date(),
     },
   });
@@ -184,7 +184,7 @@ async function getColumnByTicketId(ticketId) {
   });
 }
 
-module.exports.isColumnNameValid = isColumnNameValid;
+module.exports.isColumnTitleValid = isColumnTitleValid;
 module.exports.getNextColumnIndex = getNextColumnIndex;
 module.exports.createColumn = createColumn;
 module.exports.updateColumn = updateColumn;

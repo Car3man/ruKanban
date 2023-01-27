@@ -136,7 +136,7 @@ async function moveTicket(ticketId, columnId, index) {
           gte: index,
         },
       },
-      select: { id: true },
+      select: { id: true, index: true },
       orderBy: [
         {
           index: 'desc',
@@ -144,15 +144,13 @@ async function moveTicket(ticketId, columnId, index) {
       ],
     });
 
-    for (const ticketToUpdate of ticketsToUpdate) {
+    for (let i = 0; i < ticketsToUpdate.length; i += 1) {
       await tx.tickets.update({
         where: {
-          id: ticketToUpdate.id,
+          id: ticketsToUpdate[i].id,
         },
         data: {
-          index: {
-            increment: 1,
-          },
+          index: index + (ticketsToUpdate.length - i),
         },
       });
     }
