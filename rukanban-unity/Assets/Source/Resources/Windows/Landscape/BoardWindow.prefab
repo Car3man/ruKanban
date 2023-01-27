@@ -528,6 +528,7 @@ MonoBehaviour:
   itemTemplate: {fileID: 4831363291371249220}
   itemParent: {fileID: 5296424447577862179}
   addColumnContainer: {fileID: 8489782561500896936}
+  currColumnItems: []
 --- !u!114 &7915018009976322110
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -729,10 +730,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 096dfbb4138946a28d68ed5ddc6633b4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  nameText: {fileID: 7352068869570787287}
+  titleText: {fileID: 7352068869570787287}
   deleteButton: {fileID: 8307219199870548006}
   addTicketButton: {fileID: 4370272334903786392}
-  runtimeTemplateHolder: {fileID: 0}
   itemTemplate: {fileID: 617476598158205993}
   itemParent: {fileID: 6286943428130832210}
   itemPlaceholder: {fileID: 3829862954331254323}
@@ -1686,7 +1686,7 @@ GameObject:
   - component: {fileID: 7352068869570787287}
   - component: {fileID: 2694656765985205746}
   m_Layer: 5
-  m_Name: Name
+  m_Name: Title
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3307,6 +3307,38 @@ MonoBehaviour:
             m_StringArgument: 
             m_BoolArgument: 0
           m_CallState: 2
+  - eventID: 2
+    callback:
+      m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 617476598158205993}
+          m_TargetAssemblyTypeName: RuKanban.App.Window.TicketItem, Assembly-CSharp
+          m_MethodName: HandlePointerDown
+          m_Mode: 0
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+  - eventID: 3
+    callback:
+      m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 617476598158205993}
+          m_TargetAssemblyTypeName: RuKanban.App.Window.TicketItem, Assembly-CSharp
+          m_MethodName: HandlePointerUp
+          m_Mode: 0
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
 --- !u!114 &7558537513770952394
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3345,7 +3377,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6d0e683b691944ff903e9d183c883e14, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  itemButton: {fileID: 8126839441197489520}
   titleText: {fileID: 1697128150603553317}
   overlapTrigger: {fileID: 7038708275477214612}
 --- !u!114 &1717275282435135170

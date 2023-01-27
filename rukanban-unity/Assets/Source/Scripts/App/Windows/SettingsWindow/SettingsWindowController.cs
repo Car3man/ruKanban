@@ -40,7 +40,7 @@ namespace RuKanban.App.Window
 
             try
             {
-                await AppManager.AuthorizedApiCall(this, signOutRequest);
+                await AppManager.ApiCall(this, signOutRequest);
             }
             catch
             {

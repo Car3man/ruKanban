@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using BestHTTP;
 using Newtonsoft.Json;
 using RuKanban.Services.Api;
@@ -14,26 +16,37 @@ namespace RuKanban.App.Window
     public class BoardWindowController : BaseAppWindowController
     {
         private readonly BoardWindow _window;
+        private readonly BoardApiQueue _apiQueue;
 
-        private string _boardId;
-        private List<Column> _boardColumns;
-        private Dictionary<Column, List<Ticket>> _boardTickets;
+        private string _id;
+        private Dictionary<ColumnItem, Column> _columnsBindings;
+        private Dictionary<TicketItem, Ticket> _ticketsBindings;
+        private Dictionary<ColumnItem, List<TicketItem>> _columnTicketBindings;
 
         public BoardWindowController(AppManager appManager, BoardWindow window)
             : base(appManager, window)
         {
+            appManager.MakeWindowControllerTickable(this);
+            
             _window = window;
             _window.BindController(this);
+            
+            _apiQueue = new BoardApiQueue(appManager, this);
         }
-        
+
+        public override void Tick()
+        {
+            _apiQueue.Tick();
+        }
+
         public void Reopen()
         {
-            if (string.IsNullOrEmpty(_boardId))
+            if (string.IsNullOrEmpty(_id))
             {
-                throw new Exception($"Cant reopen {typeof(BoardWindow)} window cause '_boardId' is null");
+                throw new Exception($"Cant reopen {typeof(BoardWindow)} window because '_id' is null");
             }
             
-            Open(_boardId);
+            Open(_id);
         }
 
         public async void Open(string boardId)
@@ -43,9 +56,10 @@ namespace RuKanban.App.Window
                 _window.Hide(true, true);
             }
 
-            _boardId = boardId;
-            _boardColumns = new List<Column>();
-            _boardTickets = new Dictionary<Column, List<Ticket>>();
+            _id = boardId;
+            _columnsBindings = new Dictionary<ColumnItem, Column>();
+            _ticketsBindings = new Dictionary<TicketItem, Ticket>();
+            _columnTicketBindings = new Dictionary<ColumnItem, List<TicketItem>>();
             
             _window.Show(false);
             
@@ -54,7 +68,7 @@ namespace RuKanban.App.Window
             ApiRequest getColumnsRequest = AppManager.ApiService.Column.GetColumns(boardId);
             HTTPResponse getColumnsResponse;
 
-            try { getColumnsResponse = await AppManager.AuthorizedApiCall(this, getColumnsRequest); }
+            try { getColumnsResponse = await AppManager.ApiCall(this, getColumnsRequest); }
             catch (Exception exception) when (exception is not UnauthorizedApiRequest)
             {
                 AppManager.OnUnexpectedApiCallException(this, getColumnsRequest, exception);
@@ -70,17 +84,15 @@ namespace RuKanban.App.Window
             loadingWindow.DestroyWindow();
 
             var getColumnsJsonResponse = JsonConvert.DeserializeObject<GetColumnsRes>(getColumnsResponse.DataAsText)!;
-
-            _boardColumns = new List<Column>(getColumnsJsonResponse.columns);
             
             _window.header.backButton.onClick.AddListener(OnHeaderBackButtonClick);
             _window.header.settingsButton.onClick.AddListener(OnHeaderSettingsButtonClick);
-            _window.OnColumnItemReady = OnColumnItemReady;
-            _window.OnColumnTicketClick = OnColumnTicketClick;
-            _window.OnColumnTicketMoveToAnotherColumn = OnColumnTicketMoveToAnotherColumn;
-            _window.OnDeleteButtonClick = OnDeleteButtonClick;
-            _window.OnAddTicketButtonClick = OnAddTicketButtonClick;
             _window.addColumnButton.onClick.AddListener(OnAddColumnButtonClick);
+            _window.OnColumnItemReady = OnColumnItemReady;
+            _window.OnColumnDeleteButtonClick = OnColumnDeleteButtonClick;
+            _window.OnColumnTicketClick = OnColumnTicketClick;
+            _window.OnColumnTicketMove = OnColumnTicketMove;
+            _window.OnColumnAddTicketButtonClick = OnColumnAddTicketButtonClick;
             _window.SetColumns(getColumnsJsonResponse.columns);
         }
 
@@ -96,86 +108,152 @@ namespace RuKanban.App.Window
             AppManager.GetReadyRootWindow<SettingsWindow, SettingsWindowController>().Open();
         }
 
-        private async void OnColumnItemReady(Column column, ColumnItem columnItem)
-        {
-            ApiRequest getTicketsRequest = AppManager.ApiService.Ticket.GetTickets(column.id);
-            HTTPResponse getTicketsResponse;
-
-            try { getTicketsResponse = await AppManager.AuthorizedApiCall(this, getTicketsRequest); }
-            catch (Exception exception) when (exception is not UnauthorizedApiRequest)
-            {
-                AppManager.OnUnexpectedApiCallException(this, getTicketsRequest, exception);
-                return;
-            }
-            
-            if (!getTicketsResponse.IsSuccess)
-            {
-                AppManager.OnUnexpectedApiCallException(this, getTicketsRequest, null);
-                return;
-            }
-
-            var getTicketsJsonResponse = JsonConvert.DeserializeObject<GetTicketsRes>(getTicketsResponse.DataAsText)!;
-            
-            _boardTickets.Add(column, new List<Ticket>(getTicketsJsonResponse.tickets));
-            
-            columnItem.SetTickets(new List<Ticket>(getTicketsJsonResponse.tickets));
-        }
-
         private void OnAddColumnButtonClick()
         {
-            AppManager.GetReadyRootWindow<CreateColumnWindow, CreateColumnWindowController>().Open(_boardId);
+            AppManager.GetReadyRootWindow<CreateColumnWindow, CreateColumnWindowController>().Open(_window.CreateColumnLocal);
         }
 
-        private void OnColumnTicketClick(Column column, Ticket ticket)
+        private async void OnColumnItemReady(ColumnItem columnItem, Column column, bool isLocal)
         {
+            _columnsBindings.Add(columnItem, column);
+            _columnTicketBindings.Add(columnItem, new List<TicketItem>());
+            
+            columnItem.OnTicketItemReady = (ticketItem, ticket, isTicketLocal) =>
+            {
+                OnTicketItemReady(columnItem, ticketItem, ticket, isTicketLocal);
+            };
+            
+            if (isLocal)
+            {
+                ApiRequest createColumnRequest = AppManager.ApiService.Column.CreateColumn(_id, column.name);
+                _apiQueue.CallApi(createColumnRequest, (request, response) =>
+                {
+                    CreateRemoteColumnResponse(columnItem, request, response);
+                });
+            }
+            else
+            {
+                ApiRequest getTicketsRequest = AppManager.ApiService.Ticket.GetTickets(column.id);
+                HTTPResponse getTicketsHTTPResponse = await AppManager.ApiCall(this, getTicketsRequest);
+
+                if (!getTicketsHTTPResponse.IsSuccess)
+                {
+                    AppManager.OnUnexpectedApiCallException(this, getTicketsRequest, null);
+                    return;
+                }
+
+                var getTicketsResponse = JsonConvert.DeserializeObject<GetTicketsRes>(getTicketsHTTPResponse.DataAsText)!;
+                columnItem.SetTickets(new List<Ticket>(getTicketsResponse.tickets));
+            }
+        }
+
+        private void CreateRemoteColumnResponse(ColumnItem columnItem, ApiRequest request, HTTPResponse httpResponse)
+        {
+            var createColumnResponse = JsonConvert.DeserializeObject<CreateColumnRes>(httpResponse.DataAsText)!;
+            if (!httpResponse.IsSuccess)
+            {
+                _apiQueue.CancelAndClear();
+                AppManager.OnUnexpectedApiCallException(this, request, null);
+                return;
+            }
+
+            _columnsBindings[columnItem] = createColumnResponse.column;
+        }
+
+        private void OnTicketItemReady(ColumnItem columnItem, TicketItem ticketItem, Ticket ticket, bool isLocal)
+        {
+            _ticketsBindings.Add(ticketItem, ticket);
+            _columnTicketBindings[columnItem].Add(ticketItem);
+            
+            if (isLocal)
+            {
+                Column column = _columnsBindings[columnItem];
+                ApiRequest createTicketRequest = AppManager.ApiService.Ticket.CreateTicket(column.id, ticket.title, ticket.description);
+                _apiQueue.CallApi(createTicketRequest, (request, response) =>
+                {
+                    CreateRemoteTicketResponse(ticketItem, request, response);
+                });
+            }
+        }
+
+        private void CreateRemoteTicketResponse(TicketItem ticketItem, ApiRequest request, HTTPResponse httpResponse)
+        {
+            var createTicketResponse = JsonConvert.DeserializeObject<CreateTicketRes>(httpResponse.DataAsText)!;
+            if (!httpResponse.IsSuccess)
+            {
+                _apiQueue.CancelAndClear();
+                AppManager.OnUnexpectedApiCallException(this, request, null);
+                return;
+            }
+
+            _ticketsBindings[ticketItem] = createTicketResponse.ticket;
+        }
+
+        private void OnColumnDeleteButtonClick(ColumnItem columnItem)
+        {
+            _window.DeleteColumn(columnItem);
+            
+            Column column = _columnsBindings[columnItem];
+            ApiRequest deleteColumnRequest = AppManager.ApiService.Column.DeleteColumn(column.id);
+            _apiQueue.CallApi(deleteColumnRequest, (request, httpResponse) =>
+            {
+                if (!httpResponse.IsSuccess)
+                {
+                    _apiQueue.CancelAndClear();
+                    AppManager.OnUnexpectedApiCallException(this, request, null);
+                    return;
+                }
+            });
+        }
+
+        private void OnColumnAddTicketButtonClick(ColumnItem columnItem)
+        {
+            AppManager.GetReadyRootWindow<CreateTicketWindow, CreateTicketWindowController>().Open(columnItem.CreateTicketLocal);
+        }
+
+        private void OnColumnTicketClick(TicketItem ticketItem)
+        {
+            Ticket ticket = _ticketsBindings[ticketItem];
+
             AppManager.GetReadyRootWindow<TicketWindow, TicketWindowController>().Open(ticket.id);
         }
 
-        private async void OnDeleteButtonClick(Column column, ColumnItem columnItem)
+        private void OnColumnTicketMove(ColumnItem oldColumnItem, TicketItem ticketItem, ColumnItem newColumnItem, TicketItem insertAfterItem)
         {
-            ApiRequest deleteColumnRequest = AppManager.ApiService.Column.DeleteColumn(column.id);
-            HTTPResponse deleteColumnResponse;
+            Ticket ticketToMove = _ticketsBindings[ticketItem];
+            Column moveToColumn = _columnsBindings[newColumnItem];
+            Ticket insertAfterTicket = insertAfterItem != null ? _ticketsBindings[insertAfterItem] : null;
+            
+            string ticketId = ticketToMove.id;
+            string columnId = moveToColumn.id;
+            int ticketIndex = insertAfterTicket != null ? insertAfterTicket.index + 1 : 0;
 
-            try { deleteColumnResponse = await AppManager.AuthorizedApiCall(this, deleteColumnRequest); }
-            catch (Exception exception) when (exception is not UnauthorizedApiRequest)
+            _columnTicketBindings[oldColumnItem].Remove(ticketItem);
+            int insertIndex = insertAfterItem != null ? _columnTicketBindings[newColumnItem].IndexOf(insertAfterItem) + 1 : 0;
+            List<Ticket> ticketsToUpdateIndex = _columnTicketBindings[newColumnItem]
+                .Select(x => _ticketsBindings[x])
+                .Where(x => x.index >= ticketIndex)
+                .OrderByDescending(x => x.index)
+                .ToList();
+            for (int i = 0; i < ticketsToUpdateIndex.Count; i++)
             {
-                AppManager.OnUnexpectedApiCallException(this, deleteColumnRequest, exception);
-                return;
+                ticketsToUpdateIndex[i].index = ticketIndex + (ticketsToUpdateIndex.Count - i);
             }
+            _columnTicketBindings[newColumnItem].Insert(insertIndex, ticketItem);
+            ticketToMove.column_id = columnId;
+            ticketToMove.index = ticketIndex;
+            newColumnItem.TakeTicket(ticketItem, insertAfterItem);
             
-            if (!deleteColumnResponse.IsSuccess)
+            ApiRequest moveTicketRequest = AppManager.ApiService.Ticket.MoveTicket(ticketId, columnId, ticketIndex);
+            _apiQueue.CallApi(moveTicketRequest, (request, httpResponse) =>
             {
-                AppManager.OnUnexpectedApiCallException(this, deleteColumnRequest, null);
-                return;
-            }
-
-            AppManager.GetReadyRootWindow<BoardWindow, BoardWindowController>().Reopen();
-        }
-        
-        private void OnAddTicketButtonClick(Column column, ColumnItem columnItem)
-        {
-            AppManager.GetReadyRootWindow<CreateTicketWindow, CreateTicketWindowController>().Open(column.id);
-        }
-
-        private async void OnColumnTicketMoveToAnotherColumn(Column newColumn, Ticket ticket, int index)
-        {
-            ApiRequest moveTicketRequest = AppManager.ApiService.Ticket.MoveTicket(ticket.id, newColumn.id, index);
-            HTTPResponse moveTicketResponse;
-            
-            try { moveTicketResponse = await AppManager.AuthorizedApiCall(this, moveTicketRequest); }
-            catch (Exception exception) when (exception is not UnauthorizedApiRequest)
-            {
-                AppManager.OnUnexpectedApiCallException(this, moveTicketRequest, exception);
-                return;
-            }
-            
-            if (!moveTicketResponse.IsSuccess)
-            {
-                AppManager.OnUnexpectedApiCallException(this, moveTicketRequest, null);
-                return;
-            }
-            
-            AppManager.GetReadyRootWindow<BoardWindow, BoardWindowController>().Reopen();
+                if (!httpResponse.IsSuccess)
+                {
+                    _apiQueue.CancelAndClear();
+                    AppManager.OnUnexpectedApiCallException(this, request, null);
+                    return;
+                }
+            });
         }
     }
 }

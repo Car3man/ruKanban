@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using RuKanban.Services.Api.DatabaseModels;
 using TMPro;
 using UnityEngine;
@@ -9,7 +8,7 @@ namespace RuKanban.App.Window
 {
     public class ColumnItem : MonoBehaviour
     {
-        public TextMeshProUGUI nameText;
+        public TextMeshProUGUI titleText;
         public Button deleteButton;
         public Button addTicketButton;
         
@@ -18,32 +17,39 @@ namespace RuKanban.App.Window
         [SerializeField] private TicketItemPlaceholder itemPlaceholder;
         public Transform TicketItemsParent => itemParent;
         
-        public List<Ticket> currTickets;
         public List<TicketItem> currTicketItems;
 
-        public Action<Ticket> OnTicketItemClick;
-        public Action<Ticket, TicketItem> OnTicketItemDrag;
-        public Action<Ticket, TicketItem> OnTicketItemBeginDrag;
-        public Action<Ticket, TicketItem> OnTicketItemEndDrag;
+        public delegate void TicketItemReadyDelegate(TicketItem ticketItem, Ticket ticket, bool isLocal);
+        public delegate void TicketItemClickDelegate(TicketItem ticketItem);
+        public delegate void TicketItemBeginDragDelegate(TicketItem ticketItem);
+        public delegate void TicketItemDragDelegate(TicketItem ticketItem);
+        public delegate void TicketItemEndDragDelegate(TicketItem ticketItem);
+        
+        public TicketItemReadyDelegate OnTicketItemReady;
+        public TicketItemClickDelegate OnTicketItemClick;
+        public TicketItemBeginDragDelegate OnTicketItemDrag;
+        public TicketItemDragDelegate OnTicketItemBeginDrag;
+        public TicketItemEndDragDelegate OnTicketItemEndDrag;
 
         public void ResetElements()
         {
-            nameText.text = string.Empty;
+            titleText.text = string.Empty;
             deleteButton.onClick.RemoveAllListeners();
             addTicketButton.onClick.RemoveAllListeners();
+            
             itemTemplate.gameObject.SetActive(false);
+            itemPlaceholder.gameObject.SetActive(false);
             SetTickets(new List<Ticket>());
+            
+            OnTicketItemReady = null;
             OnTicketItemClick = null;
             OnTicketItemDrag = null;
             OnTicketItemBeginDrag = null;
             OnTicketItemEndDrag = null;
-            itemPlaceholder.gameObject.SetActive(false);
         }
         
         public void SetTickets(List<Ticket> tickets)
         {
-            currTickets = tickets;
-            
             if (currTicketItems != null)
             {
                 foreach (TicketItem item in currTicketItems)
@@ -56,26 +62,36 @@ namespace RuKanban.App.Window
             
             foreach (Ticket ticket in tickets)
             {
-                TicketItem ticketItem = Instantiate(itemTemplate, itemParent);
-                ticketItem.gameObject.SetActive(true);
-
-                ticketItem.currTicket = ticket;
-                ticketItem.itemButton.onClick.AddListener(() =>
-                {
-                    if (ticketItem.IsDragging)
-                    {
-                        return;
-                    }
-                    
-                    OnTicketItemClick?.Invoke(ticket);
-                });
-                ticketItem.OnDrag = item => OnTicketItemDrag?.Invoke(ticket, item);
-                ticketItem.OnBeginDrag = item => OnTicketItemBeginDrag?.Invoke(ticket, item);
-                ticketItem.OnEndDrag = item => OnTicketItemEndDrag?.Invoke(ticket, item);
-                ticketItem.titleText.text = ticket.title;
-
-                currTicketItems.Add(ticketItem);
+                TicketItem ticketItem = CreateTicket(ticket);
+                OnTicketItemReady?.Invoke(ticketItem, ticket, false);
             }
+        }
+
+        public void CreateTicketLocal(string title, string description)
+        {
+            Ticket ticket = new Ticket
+            {
+                title = title,
+                description = description
+            };
+            TicketItem ticketItem = CreateTicket(ticket);
+            OnTicketItemReady?.Invoke(ticketItem, ticket, true);
+        }
+
+        private TicketItem CreateTicket(Ticket ticket)
+        {
+            TicketItem ticketItem = Instantiate(itemTemplate, itemParent);
+            ticketItem.gameObject.SetActive(true);
+
+            ticketItem.titleText.text = ticket.title;
+            ticketItem.OnClick = item => OnTicketItemClick?.Invoke(item);
+            ticketItem.OnDrag = item => OnTicketItemDrag?.Invoke(item);
+            ticketItem.OnBeginDrag = item => OnTicketItemBeginDrag?.Invoke(item);
+            ticketItem.OnEndDrag = item => OnTicketItemEndDrag?.Invoke(item);
+
+            currTicketItems.Add(ticketItem);
+
+            return ticketItem;
         }
 
         public void SetTicketPlaceholderActive(bool value, int index = 0, float height = 35)
@@ -85,16 +101,20 @@ namespace RuKanban.App.Window
             itemPlaceholder.SetHeight(height);
         }
 
-        public void TakeTicket(Ticket ticket, TicketItem ticketItem, int index)
+        public void TakeTicket(TicketItem ticketItem, TicketItem insertAfter)
         {
-            ticketItem.transform.SetParent(itemParent);
-            ticketItem.transform.SetSiblingIndex(index);
-            ticketItem.itemButton.onClick.AddListener(() => OnTicketItemClick?.Invoke(ticket));
-            ticketItem.OnDrag = item => OnTicketItemDrag?.Invoke(ticket, item);
-            ticketItem.OnBeginDrag = item => OnTicketItemBeginDrag?.Invoke(ticket, item);
-            ticketItem.OnEndDrag = item => OnTicketItemEndDrag?.Invoke(ticket, item);
+            int siblingIndex = insertAfter != null ? insertAfter.transform.GetSiblingIndex() + 1 : 0;
             
-            currTicketItems.Add(ticketItem);
+            ticketItem.transform.SetParent(itemParent);
+            ticketItem.transform.SetSiblingIndex(siblingIndex);
+            
+            ticketItem.OnClick = item => OnTicketItemClick?.Invoke(item);
+            ticketItem.OnDrag = item => OnTicketItemDrag?.Invoke(item);
+            ticketItem.OnBeginDrag = item => OnTicketItemBeginDrag?.Invoke(item);
+            ticketItem.OnEndDrag = item => OnTicketItemEndDrag?.Invoke(item);
+
+            int insertAfterIndex = currTicketItems.IndexOf(insertAfter) + 1;
+            currTicketItems.Insert(insertAfterIndex, ticketItem);
         }
     }
 }

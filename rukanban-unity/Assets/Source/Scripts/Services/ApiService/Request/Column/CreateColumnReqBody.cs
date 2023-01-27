@@ -2,11 +2,11 @@
 {
     public class CreateColumnReqBody
     {
-        public string name;
+        public string title;
 
-        public CreateColumnReqBody(string name)
+        public CreateColumnReqBody(string title)
         {
-            this.name = name;
+            this.title = title;
         }
     }
 }

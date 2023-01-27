@@ -43,7 +43,7 @@ namespace RuKanban.App.Window
             ApiRequest createWorkspaceRequest = AppManager.ApiService.Workspace.CreateWorkspace(workspaceName);
             HTTPResponse createWorkspaceResponse;
 
-            try { createWorkspaceResponse = await AppManager.AuthorizedApiCall(this, createWorkspaceRequest); }
+            try { createWorkspaceResponse = await AppManager.ApiCall(this, createWorkspaceRequest); }
             catch (Exception exception) when (exception is not UnauthorizedApiRequest)
             {
                 AppManager.OnUnexpectedApiCallException(this, createWorkspaceRequest, exception);
