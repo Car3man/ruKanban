@@ -96,7 +96,7 @@ const getAccessTokenFromHeader = (req) => {
 const verifyToken = async (token) => {
   let payload;
   try {
-    payload = await jwtVerify(token, process.env.JWT_SECRET);
+    payload = await jwtVerify(token, global.jwtSecret);
   } catch (err) {
     if (err instanceof JsonWebTokenError) {
       return { isValid: false };
@@ -159,7 +159,7 @@ const createAccessToken = (userId, login) => jwt.sign({
   alg: 'HS256',
   userId: userId.toString(),
   login,
-}, process.env.JWT_SECRET);
+}, global.jwtSecret);
 
 /**
  * @param {String} accessToken
@@ -171,7 +171,7 @@ const createRefreshToken = (accessToken) => jwt.sign({
   exp: Math.floor(getRefreshTokenExpiresAt().getTime() / 1000),
   alg: 'HS256',
   accessToken,
-}, process.env.JWT_SECRET);
+}, global.jwtSecret);
 
 /**
  * Returns access and refresh tokens

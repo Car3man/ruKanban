@@ -25,11 +25,30 @@ psql -v ON_ERROR_STOP=1 -d $PGDATABASE -U $PGUSERNAME <<-EOSQL
 
 -- Not affect in docker
 
+DROP TABLE IF EXISTS public.jwt_secrets;
 DROP TABLE IF EXISTS public.users;
 DROP TABLE IF EXISTS public.refresh_tokens;
+DROP TABLE IF EXISTS public.revoked_tokens;
 DROP TABLE IF EXISTS public.roles;
+DROP TABLE IF EXISTS public.workspaces;
+DROP TABLE IF EXISTS public.boards;
+DROP TABLE IF EXISTS public.columns;
+DROP TABLE IF EXISTS public.tickets;
+DROP TABLE IF EXISTS public.workspace_roles;
+DROP TABLE IF EXISTS public.user_workspace;
+DROP TABLE IF EXISTS public.user_board;
+DROP TABLE IF EXISTS public.user_ticket;
+
 
 -- Creating tables
+
+CREATE TABLE public.jwt_secrets
+(
+    id BIGSERIAL NOT NULL,
+    secret CHARACTER VARYING(128) NOT NULL,
+    created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    PRIMARY KEY (id)
+);
 
 CREATE TABLE public.users
 (

@@ -31,6 +31,12 @@ model columns {
   @@unique([board_id, index])
 }
 
+model jwt_secrets {
+  id         BigInt   @id @default(autoincrement())
+  secret     String   @db.VarChar(128)
+  created_at DateTime @db.Timestamp(6)
+}
+
 model refresh_tokens {
   id         BigInt   @id @default(autoincrement())
   token      String   @unique
