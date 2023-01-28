@@ -49,6 +49,11 @@ namespace RuKanban.App.Window
             _queue.Add((request, callback));
         }
 
+        public bool IsAnyRequest()
+        {
+            return _currProcessingRequest != null || _queue.Count > 0;
+        }
+
         public void CancelAndClear()
         {
             _cancellationTokenSource.Cancel();

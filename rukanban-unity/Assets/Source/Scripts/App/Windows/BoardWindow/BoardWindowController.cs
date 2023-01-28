@@ -37,6 +37,7 @@ namespace RuKanban.App.Window
         public override void Tick()
         {
             _apiQueue.Tick();
+            _window.header.syncSpinner.SetActive(_apiQueue.IsAnyRequest());
         }
 
         public void Reopen()
