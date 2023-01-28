@@ -34,7 +34,7 @@ namespace RuKanban.App.Window
             ApiRequest getWorkspacesRequest = AppManager.ApiService.Workspace.GetWorkspaces();
             HTTPResponse getWorkspacesResponse;
 
-            try { getWorkspacesResponse = await AppManager.AuthorizedApiCall(this, getWorkspacesRequest); }
+            try { getWorkspacesResponse = await AppManager.ApiCall(this, getWorkspacesRequest); }
             catch (Exception exception) when (exception is not UnauthorizedApiRequest)
             {
                 AppManager.OnUnexpectedApiCallException(this, getWorkspacesRequest, exception);

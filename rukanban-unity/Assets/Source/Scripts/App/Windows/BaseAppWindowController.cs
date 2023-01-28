@@ -16,5 +16,10 @@ namespace RuKanban.App.Window
                 themeColorImage.Construct(AppManager.ThemeService);
             }
         }
+
+        public virtual void Tick()
+        {
+            
+        }
     }
 }

@@ -48,7 +48,7 @@ namespace RuKanban.App.Window
             ApiRequest getBoardsRequest = AppManager.ApiService.Board.GetBoards(workspaceId);
             HTTPResponse getBoardsResponse;
 
-            try { getBoardsResponse = await AppManager.AuthorizedApiCall(this, getBoardsRequest); }
+            try { getBoardsResponse = await AppManager.ApiCall(this, getBoardsRequest); }
             catch (Exception exception) when (exception is not UnauthorizedApiRequest)
             {
                 AppManager.OnUnexpectedApiCallException(this, getBoardsRequest, exception);

@@ -17,11 +17,11 @@ namespace RuKanban.Services.Api.Routes
             return request;
         }
         
-        public ApiRequest CreateColumn(string boardId, string name)
+        public ApiRequest CreateColumn(string boardId, string title)
         {
             var uri = GetUri($"/column.create?board_id={boardId}");
             var request = new ApiRequest(uri, HTTPMethods.Post);
-            var requestBody = new CreateColumnReqBody(name);
+            var requestBody = new CreateColumnReqBody(title);
             request.SetJsonBody(JsonConvert.SerializeObject(requestBody));
             return request;
         }

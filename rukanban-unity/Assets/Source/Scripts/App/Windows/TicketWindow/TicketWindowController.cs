@@ -36,7 +36,7 @@ namespace RuKanban.App.Window
             ApiRequest getTicketByIdRequest = AppManager.ApiService.Ticket.GetTicketById(ticketId);
             HTTPResponse getTicketByIdResponse;
             
-            try { getTicketByIdResponse = await AppManager.AuthorizedApiCall(this, getTicketByIdRequest); }
+            try { getTicketByIdResponse = await AppManager.ApiCall(this, getTicketByIdRequest); }
             catch (Exception exception) when (exception is not UnauthorizedApiRequest)
             {
                 AppManager.OnUnexpectedApiCallException(this, getTicketByIdRequest, exception);
@@ -67,12 +67,14 @@ namespace RuKanban.App.Window
 
         private async void OnTicketDeleteButtonClick()
         {
+            throw new NotImplementedException();
+            
             var loadingWindow = AppManager.CreateAndShowWindow<LoadingWindow, LoadingWindowController>(AppManager.Windows.Root);
             
             ApiRequest deleteTicketRequest = AppManager.ApiService.Ticket.DeleteTicket(_ticketId);
             HTTPResponse deleteTicketResponse;
 
-            try { deleteTicketResponse = await AppManager.AuthorizedApiCall(this, deleteTicketRequest); }
+            try { deleteTicketResponse = await AppManager.ApiCall(this, deleteTicketRequest); }
             catch (Exception exception) when (exception is not UnauthorizedApiRequest)
             {
                 AppManager.OnUnexpectedApiCallException(this, deleteTicketRequest, exception);
@@ -109,6 +111,8 @@ namespace RuKanban.App.Window
 
         private async void OnTicketSaveButtonClick()
         {
+            throw new NotImplementedException();
+            
             var loadingWindow = AppManager.CreateAndShowWindow<LoadingWindow, LoadingWindowController>(AppManager.Windows.Root);
             
             string newTitle = _window.titleInput.text;
@@ -120,14 +124,14 @@ namespace RuKanban.App.Window
             HTTPResponse changeTicketTitleResponse;
             HTTPResponse changeTicketDescriptionResponse;
             
-            try { changeTicketTitleResponse = await AppManager.AuthorizedApiCall(this, changeTicketTitleRequest); }
+            try { changeTicketTitleResponse = await AppManager.ApiCall(this, changeTicketTitleRequest); }
             catch (Exception exception) when (exception is not UnauthorizedApiRequest)
             {
                 AppManager.OnUnexpectedApiCallException(this, changeTicketTitleRequest, exception);
                 return;
             }
             
-            try { changeTicketDescriptionResponse = await AppManager.AuthorizedApiCall(this, changeTicketDescriptionRequest); }
+            try { changeTicketDescriptionResponse = await AppManager.ApiCall(this, changeTicketDescriptionRequest); }
             catch (Exception exception) when (exception is not UnauthorizedApiRequest)
             {
                 AppManager.OnUnexpectedApiCallException(this, changeTicketDescriptionRequest, exception);

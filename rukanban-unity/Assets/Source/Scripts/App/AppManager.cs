@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using BestHTTP;
 using Newtonsoft.Json;
@@ -23,10 +24,22 @@ namespace RuKanban.App
         [Inject] public ThemeService ThemeService { get; private set; }
         [Inject] public Windows Windows { get; private set; }
 
+        private readonly HashSet<BaseAppWindowController> _tickableWindowControllers = new();
+
         private void Start()
         {
             InitializeWindows();
             GetReadyRootWindow<UserWorkspacesWindow, UserWorkspacesWindowController>().Open();
+        }
+
+        private void Update()
+        {
+            _tickableWindowControllers.RemoveWhere(x => x == null);
+            
+            foreach (BaseAppWindowController windowController in _tickableWindowControllers)
+            {
+                windowController.Tick();
+            }
         }
 
         private void InitializeWindows()
@@ -36,6 +49,11 @@ namespace RuKanban.App
             Instantiate(Resources.Load<GameObject>($"{windowsBaseResourcePath}/Windows"), Windows.transform);
             Windows.Initialize(windowsBaseResourcePath);
             Windows.Root.Show(false);
+        }
+
+        public void MakeWindowControllerTickable(BaseAppWindowController windowController)
+        {
+            _tickableWindowControllers.Add(windowController);
         }
 
         public void HideAllWindows(bool force = false, bool includeRoot = false)
@@ -93,46 +111,58 @@ namespace RuKanban.App
             return (T)Activator.CreateInstance(typeof(T),  this, window);
         }
 
-        public async Task<HTTPResponse> AuthorizedApiCall(BaseAppWindowController caller, ApiRequest request)
+        public async Task<HTTPResponse> ApiCall(BaseAppWindowController caller, ApiRequest request, bool authorized = true)
         {
-            request = AuthorizationService.GetRequestWithAuthorization(request);
-            HTTPResponse response = await request.GetHTTPResponseAsync();
-            
-            if (response.StatusCode == 401)
+            try
             {
-                string accessToken = AuthorizationService.AuthorizationData.AccessToken;
-                string refreshToken = AuthorizationService.AuthorizationData.RefreshToken;
-                
-                if (!string.IsNullOrEmpty(accessToken) && !string.IsNullOrEmpty(refreshToken))
+                if (authorized)
                 {
-                    ApiRequest refreshTokensRequest = ApiService.Auth.RefreshTokens(refreshToken);
-                    refreshTokensRequest.AddHeader("Authorization", $"Bearer {accessToken}");
-                    HTTPResponse refreshTokensResponse = await refreshTokensRequest.GetHTTPResponseAsync();
-                    if (refreshTokensResponse.IsSuccess)
-                    {
-                        var refreshTokensJsonResponse = JsonConvert.DeserializeObject<RefreshTokensRes>(refreshTokensResponse.DataAsText);
-                    
-                        AuthorizationService.AuthorizationData = new AuthorizationData(
-                            refreshTokensJsonResponse!.access_token,
-                            refreshTokensJsonResponse!.refresh_token,
-                            AuthorizationService.AuthorizationData.UserId,
-                            AuthorizationService.AuthorizationData.Login
-                        );
-                        
-                        return await AuthorizedApiCall(caller, request);
-                    }
+                    request = AuthorizationService.GetRequestWithAuthorization(request);
                 }
+                
+                HTTPResponse response = await request.GetHTTPResponseAsync();
+                
+                if (authorized && response.StatusCode == 401)
+                {
+                    string accessToken = AuthorizationService.AuthorizationData.AccessToken;
+                    string refreshToken = AuthorizationService.AuthorizationData.RefreshToken;
+                    
+                    if (!string.IsNullOrEmpty(accessToken) && !string.IsNullOrEmpty(refreshToken))
+                    {
+                        ApiRequest refreshTokensRequest = ApiService.Auth.RefreshTokens(refreshToken);
+                        refreshTokensRequest.AddHeader("Authorization", $"Bearer {accessToken}");
+                        HTTPResponse refreshTokensResponse = await refreshTokensRequest.GetHTTPResponseAsync();
+                        if (refreshTokensResponse.IsSuccess)
+                        {
+                            var refreshTokensJsonResponse = JsonConvert.DeserializeObject<RefreshTokensRes>(refreshTokensResponse.DataAsText);
+                        
+                            AuthorizationService.AuthorizationData = new AuthorizationData(
+                                refreshTokensJsonResponse!.access_token,
+                                refreshTokensJsonResponse!.refresh_token,
+                                AuthorizationService.AuthorizationData.UserId,
+                                AuthorizationService.AuthorizationData.Login
+                            );
+                            
+                            return await ApiCall(caller, request);
+                        }
+                    }
 
-                Windows.Root.Hide(true, true);
-                Windows.Root.Show(true);
-                var authorizationWindow = Windows.Root.GetChildWindow<AuthorizationWindow>();
-                var authorizationWindowController = new AuthorizationWindowController(this, authorizationWindow);
-                authorizationWindowController.Open();
+                    Windows.Root.Hide(true, true);
+                    Windows.Root.Show(true);
+                    var authorizationWindow = Windows.Root.GetChildWindow<AuthorizationWindow>();
+                    var authorizationWindowController = new AuthorizationWindowController(this, authorizationWindow);
+                    authorizationWindowController.Open();
 
-                throw new UnauthorizedApiRequest("Unauthorized request detected, returning to authorization window.");
+                    throw new UnauthorizedApiRequest("Unauthorized request detected, returning to authorization window.");
+                }
+                
+                return response;
             }
-            
-            return response;
+            catch (Exception exception)
+            {
+                OnUnexpectedApiCallException(caller, request, exception);
+                throw;
+            }
         }
 
         public void OnUnexpectedApiCallException(BaseWindowController caller, ApiRequest request, Exception exception)

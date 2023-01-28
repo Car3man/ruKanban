@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using BestHTTP;
 
@@ -12,6 +13,7 @@ namespace RuKanban.Services.Api
         private HTTPMethods _method;
         private Dictionary<string, string> _headers;
         private byte[] _rawData;
+        private CancellationToken _cancellationToken;
 
         public ApiRequest(Uri uri, HTTPMethods method)
         {
@@ -19,6 +21,16 @@ namespace RuKanban.Services.Api
             _method = method;
             _headers = new Dictionary<string, string>();
             _rawData = Array.Empty<byte>();
+            _cancellationToken = CancellationToken.None;
+        }
+        
+        public ApiRequest(Uri uri, HTTPMethods method, CancellationToken cancellationToken)
+        {
+            _uri = uri;
+            _method = method;
+            _headers = new Dictionary<string, string>();
+            _rawData = Array.Empty<byte>();
+            _cancellationToken = cancellationToken;
         }
 
         public void AddHeader(string name, string value)
@@ -39,6 +51,11 @@ namespace RuKanban.Services.Api
             _rawData = Encoding.UTF8.GetBytes(json);
         }
 
+        public void SetCancellationToken(CancellationToken cancellationToken)
+        {
+            _cancellationToken = cancellationToken;
+        }
+        
         public Task<HTTPResponse> GetHTTPResponseAsync()
         {
             var request = new HTTPRequest(_uri, _method);
@@ -47,7 +64,7 @@ namespace RuKanban.Services.Api
                 request.AddHeader(header, _headers[header]);
             }
             request.RawData = _rawData;
-            return request.GetHTTPResponseAsync();
+            return request.GetHTTPResponseAsync(_cancellationToken);
         }
     }
 }

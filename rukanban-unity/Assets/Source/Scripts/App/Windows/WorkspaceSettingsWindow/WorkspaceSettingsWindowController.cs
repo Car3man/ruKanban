@@ -40,14 +40,14 @@ namespace RuKanban.App.Window
             HTTPResponse getWorkspaceByIdResponse;
             HTTPResponse getWorkspaceUsersResponse;
             
-            try { getWorkspaceByIdResponse = await AppManager.AuthorizedApiCall(this, getWorkspaceByIdRequest); }
+            try { getWorkspaceByIdResponse = await AppManager.ApiCall(this, getWorkspaceByIdRequest); }
             catch (Exception exception) when (exception is not UnauthorizedApiRequest)
             {
                 AppManager.OnUnexpectedApiCallException(this, getWorkspaceByIdRequest, exception);
                 return;
             }
             
-            try { getWorkspaceUsersResponse = await AppManager.AuthorizedApiCall(this, getWorkspaceUsersRequest); }
+            try { getWorkspaceUsersResponse = await AppManager.ApiCall(this, getWorkspaceUsersRequest); }
             catch (Exception exception) when (exception is not UnauthorizedApiRequest)
             {
                 AppManager.OnUnexpectedApiCallException(this, getWorkspaceUsersRequest, exception);
@@ -92,7 +92,7 @@ namespace RuKanban.App.Window
                 .UpdateWorkspace(_workspaceId, null, null, new [] {userToDelete});
             HTTPResponse updateWorkspaceResponse;
 
-            try { updateWorkspaceResponse = await AppManager.AuthorizedApiCall(this, updateWorkspaceRequest); }
+            try { updateWorkspaceResponse = await AppManager.ApiCall(this, updateWorkspaceRequest); }
             catch (Exception exception) when (exception is not UnauthorizedApiRequest)
             {
                 AppManager.OnUnexpectedApiCallException(this, updateWorkspaceRequest, exception);
@@ -134,7 +134,7 @@ namespace RuKanban.App.Window
                 .UpdateWorkspace(_workspaceId, null, new [] {userToAdd}, null);
             HTTPResponse updateWorkspaceResponse;
 
-            try { updateWorkspaceResponse = await AppManager.AuthorizedApiCall(this, updateWorkspaceRequest); }
+            try { updateWorkspaceResponse = await AppManager.ApiCall(this, updateWorkspaceRequest); }
             catch (Exception exception) when (exception is not UnauthorizedApiRequest)
             {
                 AppManager.OnUnexpectedApiCallException(this, updateWorkspaceRequest, exception);

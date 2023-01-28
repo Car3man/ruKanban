@@ -17,11 +17,13 @@ public class ThemeColorImage : MonoBehaviour
         ApplyColor(color);
     }
     
+    #if UNITY_EDITOR
     private void OnValidate()
     {
         Color? color = ThemeService.GetColorForEditor(key);
         ApplyColor(color);
     }
+    #endif
 
     private void ApplyColor(Color? color)
     {

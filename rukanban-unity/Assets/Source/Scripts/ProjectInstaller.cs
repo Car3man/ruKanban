@@ -15,10 +15,10 @@ namespace RuKanban
 
         private void InstallServices()
         {
-            Container.Bind<AppConfigurationService>().AsSingle();
-            Container.Bind<ThemeService>().AsSingle();
-            Container.Bind<ApiService>().AsSingle();
-            Container.Bind<AuthorizationService>().AsSingle();
+            Container.Bind<AppConfigurationService>().AsSingle().NonLazy();
+            Container.Bind<ThemeService>().AsSingle().NonLazy();
+            Container.Bind<ApiService>().AsSingle().NonLazy();
+            Container.Bind<AuthorizationService>().AsSingle().NonLazy();
         }
     }
 }
