@@ -104,7 +104,7 @@ CREATE TABLE public.columns
     id BIGSERIAL NOT NULL,
     board_id BIGINT NOT NULL,
     index int NOT NULL,
-    name CHARACTER VARYING(36) NOT NULL,
+    title CHARACTER VARYING(36) NOT NULL,
     created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL,
     PRIMARY KEY (id),
     UNIQUE (board_id, index)

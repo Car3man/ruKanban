@@ -12,9 +12,9 @@ model boards {
   id           BigInt       @id @default(autoincrement())
   workspace_id BigInt
   name         String       @db.VarChar(36)
-  description  String       @db.VarChar(36)
+  description  String       @db.VarChar(128)
   created_at   DateTime     @db.Timestamp(6)
-  workspaces   workspaces   @relation(fields: [workspace_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_boards_workspaces")
+  workspaces   workspaces   @relation(fields: [workspace_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_boards_workspaces")
   columns      columns[]
   user_board   user_board[]
 }
@@ -23,9 +23,9 @@ model columns {
   id         BigInt    @id @default(autoincrement())
   board_id   BigInt
   index      Int
-  name       String    @db.VarChar(36)
+  title      String    @db.VarChar(36)
   created_at DateTime  @db.Timestamp(6)
-  boards     boards    @relation(fields: [board_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_columns_boards")
+  boards     boards    @relation(fields: [board_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_columns_boards")
   tickets    tickets[]
 
   @@unique([board_id, index])
@@ -59,7 +59,7 @@ model tickets {
   title       String        @db.VarChar(128)
   description String        @db.VarChar(2048)
   created_at  DateTime      @db.Timestamp(6)
-  columns     columns       @relation(fields: [column_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_tickets_columns")
+  columns     columns       @relation(fields: [column_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_tickets_columns")
   user_ticket user_ticket[]
 
   @@unique([column_id, index])
@@ -69,7 +69,7 @@ model user_board {
   id       BigInt @id @default(autoincrement())
   user_id  BigInt
   board_id BigInt
-  boards   boards @relation(fields: [board_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_board_boards")
+  boards   boards @relation(fields: [board_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_user_board_boards")
   users    users  @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_board_users")
 
   @@unique([user_id, board_id])
@@ -79,7 +79,7 @@ model user_ticket {
   id        BigInt  @id @default(autoincrement())
   user_id   BigInt
   ticket_id BigInt
-  tickets   tickets @relation(fields: [ticket_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_ticket_tickets")
+  tickets   tickets @relation(fields: [ticket_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_user_ticket_tickets")
   users     users   @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_ticket_users")
 
   @@unique([user_id, ticket_id])
@@ -91,7 +91,7 @@ model user_workspace {
   workspace_id      BigInt
   workspace_role_id BigInt
   users             users           @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_workspace_users")
-  workspaces        workspaces      @relation(fields: [workspace_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_workspace_workspaces")
+  workspaces        workspaces      @relation(fields: [workspace_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_user_workspace_workspaces")
   workspace_roles   workspace_roles @relation(fields: [workspace_role_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_workspaces_workspace_roles")
 
   @@unique([user_id, workspace_id])
