@@ -10,7 +10,7 @@ const columnUpdate = async (req, res) => {
     const { userId } = req;
     const columnId = BigInt(req.query.column_id);
     const newColumnIndex = req.body.index;
-    const newColumnName = req.body.name;
+    const newColumnTitle = req.body.title;
 
     const column = await columnHelper.getColumnById(columnId);
 
@@ -25,16 +25,16 @@ const columnUpdate = async (req, res) => {
       return responseHelper.sendForbidden(req, res);
     }
 
-    if (newColumnName) {
-      const nameValidationResult = columnHelper.isColumnNameValid(newColumnName);
-      if (!nameValidationResult.isValid) {
+    if (newColumnTitle) {
+      const titleValidationResult = columnHelper.isColumnTitleValid(newColumnTitle);
+      if (!titleValidationResult.isValid) {
         return responseHelper.sendBadRequest(req, res, {
-          error_msg: nameValidationResult.details,
+          error_msg: titleValidationResult.details,
         });
       }
     }
 
-    await columnHelper.updateColumn(columnId, newColumnIndex, newColumnName);
+    await columnHelper.updateColumn(columnId, newColumnIndex, newColumnTitle);
 
     return responseHelper.sendOk(req, res);
   } catch (err) {

@@ -66,7 +66,7 @@ async function createColumn(boardId, title) {
     data: {
       board_id: boardId,
       index,
-      name: title,
+      title,
       created_at: new Date(),
     },
   });
@@ -76,9 +76,9 @@ async function createColumn(boardId, title) {
  * @async
  * @param {BigInt} columnId
  * @param {Number} newIndex
- * @param {String} newName
+ * @param {String} newTitle
  */
-async function updateColumn(columnId, newIndex, newName) {
+async function updateColumn(columnId, newIndex, newTitle) {
   return prisma.$transaction(async (tx) => {
     if (newIndex) {
       await tx.columns.update({
@@ -87,10 +87,10 @@ async function updateColumn(columnId, newIndex, newName) {
       });
     }
 
-    if (newName) {
+    if (newTitle) {
       await tx.columns.update({
         where: { id: columnId },
-        data: { name: newName },
+        data: { title: newTitle },
       });
     }
   });
@@ -124,7 +124,7 @@ async function getColumnsByBoardId(boardId, skip, take) {
       id: true,
       board_id: true,
       index: true,
-      name: true,
+      title: true,
       created_at: true,
     },
     orderBy: [
@@ -149,7 +149,7 @@ async function getColumnById(columnId) {
       id: true,
       board_id: true,
       index: true,
-      name: true,
+      title: true,
       created_at: true,
     },
   });
@@ -178,7 +178,7 @@ async function getColumnByTicketId(ticketId) {
       id: true,
       board_id: true,
       index: true,
-      name: true,
+      title: true,
       created_at: true,
     },
   });
