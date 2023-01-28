@@ -94,7 +94,7 @@ namespace RuKanban.App.Window
         {
             Column column = new Column
             {
-                name = title
+                title = title
             };
             ColumnItem columnItem = CreateColumn(column);
             OnColumnItemReady?.Invoke(columnItem, column, true);
@@ -116,7 +116,7 @@ namespace RuKanban.App.Window
             columnItem.gameObject.SetActive(true);
             
             columnItem.ResetElements();
-            columnItem.titleText.text = column.name;
+            columnItem.titleText.text = column.title;
             columnItem.deleteButton.onClick.AddListener(() => OnColumnDeleteButtonClick?.Invoke(columnItem));
             columnItem.addTicketButton.onClick.AddListener(() => OnColumnAddTicketButtonClick?.Invoke(columnItem));
             columnItem.OnTicketItemClick = ticketItem => { OnColumnTicketClick?.Invoke(ticketItem); };

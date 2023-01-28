@@ -125,7 +125,7 @@ namespace RuKanban.App.Window
             
             if (isLocal)
             {
-                ApiRequest createColumnRequest = AppManager.ApiService.Column.CreateColumn(_id, column.name);
+                ApiRequest createColumnRequest = AppManager.ApiService.Column.CreateColumn(_id, column.title);
                 _apiQueue.CallApi(createColumnRequest, (request, response) =>
                 {
                     CreateRemoteColumnResponse(columnItem, request, response);

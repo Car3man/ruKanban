@@ -8,7 +8,7 @@ namespace RuKanban.Services.Api.DatabaseModels
         public string id;
         public string board_id;
         public int index;
-        public string name;
+        public string title;
         public string created_at;
     }
 }
