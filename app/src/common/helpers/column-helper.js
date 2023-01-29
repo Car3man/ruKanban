@@ -1,3 +1,5 @@
+/* eslint-disable no-await-in-loop */
+
 const { PrismaClient } = require('@prisma/client');
 
 const prisma = new PrismaClient();
@@ -81,6 +83,77 @@ async function changeColumnTitle(columnId, title) {
   return prisma.columns.update({
     where: { id: columnId },
     data: { title },
+  });
+}
+
+/**
+ * @async
+ * @param {BigInt} columnId
+ * @param {BigInt} standAfterId
+ */
+async function moveColumn(columnId, standAfterId) {
+  return prisma.$transaction(async (tx) => {
+    const column = await tx.columns.findFirst({
+      where: { id: columnId },
+      select: { id: true },
+    });
+
+    const columns = await tx.columns.findMany({
+      where: {
+        board_id: column.board_id,
+      },
+      select: { id: true, index: true },
+      orderBy: [
+        {
+          index: 'asc',
+        },
+      ],
+    });
+
+    let standAfterIndex = -1;
+    let indexOffset = standAfterId ? 0 : 1;
+    for (let i = 0; i < columns.length; i += 1) {
+      const { id } = columns[i];
+
+      if (id !== columnId) {
+        await tx.columns.update({
+          where: { id },
+          data: { index: i + indexOffset },
+        });
+
+        if (id === standAfterId) {
+          standAfterIndex = i + indexOffset;
+          indexOffset += 1;
+        }
+      }
+    }
+
+    await tx.columns.update({
+      where: { id: columnId },
+      data: {
+        index: standAfterIndex + 1,
+      },
+    });
+
+    const columnsToSort = await tx.columns.findMany({
+      where: {
+        board_id: column.board_id,
+      },
+      select: { id: true, index: true },
+      orderBy: [
+        {
+          index: 'asc',
+        },
+      ],
+    });
+
+    for (let i = 0; i < columnsToSort.length; i += 1) {
+      const { id } = columnsToSort[i];
+      await tx.columns.update({
+        where: { id },
+        data: { index: i },
+      });
+    }
   });
 }
 
@@ -176,6 +249,7 @@ module.exports.isColumnTitleValid = isColumnTitleValid;
 module.exports.getNextColumnIndex = getNextColumnIndex;
 module.exports.createColumn = createColumn;
 module.exports.changeColumnTitle = changeColumnTitle;
+module.exports.moveColumn = moveColumn;
 module.exports.deleteColumn = deleteColumn;
 module.exports.getColumnsByBoardId = getColumnsByBoardId;
 module.exports.getColumnById = getColumnById;

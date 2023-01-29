@@ -1,31 +1,30 @@
-const { workspaceHelper, ticketHelper, responseHelper } = require('../common/helpers');
+const { columnHelper, responseHelper, workspaceHelper } = require('../common/helpers');
 
 /**
- * Move ticket business logic (safety)
+ * Column move business logic (safety)
  * @param {import('express').Request} req
  * @param {import('express').Response} res
  */
-const ticketMove = async (req, res) => {
+const columnMove = async (req, res) => {
   try {
     const { userId } = req;
-    const ticketId = BigInt(req.query.ticket_id);
-    const columnId = BigInt(req.body.column_id);
+    const columnId = BigInt(req.query.column_id);
     const standAfterId = BigInt(req.body.stand_after_id);
 
-    const ticket = await ticketHelper.getTicketById(ticketId);
+    const column = await columnHelper.getColumnById(columnId);
 
-    if (!ticket) {
+    if (!column) {
       return responseHelper.sendNotFound(req, res);
     }
 
-    const workspaceId = (await workspaceHelper.getWorkspaceByTicketId(ticketId)).id;
+    const workspaceId = (await workspaceHelper.getWorkspaceByColumnId(columnId)).id;
 
     const isAllowToUpdate = await workspaceHelper.isUserWorkspaceParticipant(userId, workspaceId);
     if (!isAllowToUpdate) {
       return responseHelper.sendForbidden(req, res);
     }
 
-    await ticketHelper.moveTicket(ticketId, columnId, standAfterId);
+    await columnHelper.moveColumn(columnId, standAfterId);
 
     return responseHelper.sendOk(req, res);
   } catch (err) {
@@ -34,4 +33,4 @@ const ticketMove = async (req, res) => {
   }
 };
 
-module.exports = ticketMove;
+module.exports = columnMove;
