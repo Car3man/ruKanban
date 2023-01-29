@@ -10,7 +10,7 @@ const ticketMove = async (req, res) => {
     const { userId } = req;
     const ticketId = BigInt(req.query.ticket_id);
     const columnId = BigInt(req.body.column_id);
-    const index = Number(req.body.index);
+    const standAfterId = BigInt(req.body.stand_after_id);
 
     const ticket = await ticketHelper.getTicketById(ticketId);
 
@@ -25,7 +25,7 @@ const ticketMove = async (req, res) => {
       return responseHelper.sendForbidden(req, res);
     }
 
-    await ticketHelper.moveTicket(ticket.id, columnId, index);
+    await ticketHelper.moveTicket(ticket.id, columnId, standAfterId);
 
     return responseHelper.sendOk(req, res);
   } catch (err) {

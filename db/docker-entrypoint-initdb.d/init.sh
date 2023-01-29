@@ -125,8 +125,7 @@ CREATE TABLE public.columns
     index int NOT NULL,
     title CHARACTER VARYING(36) NOT NULL,
     created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL,
-    PRIMARY KEY (id),
-    UNIQUE (board_id, index)
+    PRIMARY KEY (id)
 );
 
 CREATE TABLE public.tickets
@@ -137,8 +136,7 @@ CREATE TABLE public.tickets
     title CHARACTER VARYING(128) NOT NULL,
     description CHARACTER VARYING(2048) NOT NULL,
     created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL,
-    PRIMARY KEY (id),
-    UNIQUE (column_id, index)
+    PRIMARY KEY (id)
 );
 
 CREATE TABLE public.workspace_roles

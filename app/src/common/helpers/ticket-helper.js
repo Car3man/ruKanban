@@ -125,43 +125,72 @@ async function changeTicketDescription(ticketId, description) {
  * @async
  * @param {BigInt} ticketId
  * @param {BigInt} columnId
- * @param {Number} index
+ * @param {BigInt} standAfterId
  */
-async function moveTicket(ticketId, columnId, index) {
+async function moveTicket(ticketId, columnId, standAfterId) {
   return prisma.$transaction(async (tx) => {
-    const ticketsToUpdate = await tx.tickets.findMany({
+    const ticket = await tx.tickets.findFirst({
+      where: { id: ticketId },
+      select: { id: true, column_id: true },
+    });
+
+    const tickets = await tx.tickets.findMany({
       where: {
         column_id: columnId,
-        index: {
-          gte: index,
-        },
       },
       select: { id: true, index: true },
       orderBy: [
         {
-          index: 'desc',
+          index: 'asc',
         },
       ],
     });
 
-    for (let i = 0; i < ticketsToUpdate.length; i += 1) {
-      await tx.tickets.update({
-        where: {
-          id: ticketsToUpdate[i].id,
-        },
-        data: {
-          index: index + (ticketsToUpdate.length - i),
-        },
-      });
+    let standAfterIndex = -1;
+    let indexOffset = standAfterId ? 0 : 1;
+    for (let i = 0; i < tickets.length; i += 1) {
+      const { id } = tickets[i];
+
+      if (id !== ticketId) {
+        await tx.tickets.update({
+          where: { id },
+          data: { index: i + indexOffset },
+        });
+
+        if (id === standAfterId) {
+          standAfterIndex = i + indexOffset;
+          indexOffset += 1;
+        }
+      }
     }
 
     await tx.tickets.update({
       where: { id: ticketId },
       data: {
         column_id: columnId,
-        index,
+        index: standAfterIndex + 1,
       },
     });
+
+    const ticketsToSort = await tx.tickets.findMany({
+      where: {
+        column_id: ticket.column_id,
+      },
+      select: { id: true, index: true },
+      orderBy: [
+        {
+          index: 'asc',
+        },
+      ],
+    });
+
+    for (let i = 0; i < ticketsToSort.length; i += 1) {
+      const { id } = ticketsToSort[i];
+      await tx.tickets.update({
+        where: { id },
+        data: { index: i },
+      });
+    }
   });
 }
 
