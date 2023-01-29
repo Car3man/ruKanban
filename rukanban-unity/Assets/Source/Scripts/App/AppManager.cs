@@ -45,6 +45,7 @@ namespace RuKanban.App
         private void InitializeWindows()
         {
             bool isMobileVersion = AppConfigurationService.IsMobileVersion;
+            isMobileVersion = false; // force use landscape mode
             string windowsBaseResourcePath = isMobileVersion ? "Windows/Portrait" : "Windows/Landscape";
             Instantiate(Resources.Load<GameObject>($"{windowsBaseResourcePath}/Windows"), Windows.transform);
             Windows.Initialize(windowsBaseResourcePath);

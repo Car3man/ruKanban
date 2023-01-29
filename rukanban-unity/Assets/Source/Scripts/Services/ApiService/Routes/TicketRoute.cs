@@ -51,11 +51,11 @@ namespace RuKanban.Services.Api.Routes
             return request;
         }
 
-        public ApiRequest MoveTicket(string ticketId, string columnId, int index)
+        public ApiRequest MoveTicket(string ticketId, string columnId, string standAfterId)
         {
             var uri = GetUri($"/ticket.move?ticket_id={ticketId}");
             var request = new ApiRequest(uri, HTTPMethods.Post);
-            var requestBody = new MoveTicketReqBody(columnId, index);
+            var requestBody = new MoveTicketReqBody(columnId, standAfterId);
             request.SetJsonBody(JsonConvert.SerializeObject(requestBody));
             return request;
         }
