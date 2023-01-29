@@ -10,6 +10,12 @@ const port = 80;
  * @async
  */
 async function initServer() {
+  await new Promise((res) => {
+    setTimeout(() => {
+      res();
+    }, 1000);
+  });
+
   const jwtSecret = await prisma.jwt_secrets.findFirst();
   if (jwtSecret) {
     global.jwtSecret = jwtSecret.secret;
