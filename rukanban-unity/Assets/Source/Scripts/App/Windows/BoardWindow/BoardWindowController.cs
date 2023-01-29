@@ -90,10 +90,11 @@ namespace RuKanban.App.Window
             _window.header.settingsButton.onClick.AddListener(OnHeaderSettingsButtonClick);
             _window.addColumnButton.onClick.AddListener(OnAddColumnButtonClick);
             _window.OnColumnItemReady = OnColumnItemReady;
-            _window.OnColumnDeleteButtonClick = OnColumnDeleteButtonClick;
             _window.OnColumnTicketClick = OnColumnTicketClick;
             _window.OnColumnTicketMove = OnColumnTicketMove;
+            _window.OnColumnTitleChange = OnColumnTitleChange;
             _window.OnColumnAddTicketButtonClick = OnColumnAddTicketButtonClick;
+            _window.OnColumnDeleteButtonClick = OnColumnDeleteButtonClick;
             _window.SetColumns(getColumnsJsonResponse.columns);
         }
 
@@ -190,6 +191,35 @@ namespace RuKanban.App.Window
             _ticketsBindings[ticketItem] = createTicketResponse.ticket;
         }
 
+        private void OnColumnTitleChange(ColumnItem columnItem, string newTitle)
+        {
+            Column column = _columnsBindings[columnItem];
+            
+            if (!Column.IsTitleValid(newTitle))
+            {
+                columnItem.titleText.text = column.title;
+                return;
+            }
+
+            columnItem.titleText.text = newTitle;
+            
+            ApiRequest moveTicketRequest = AppManager.ApiService.Column.ChangeTitle(column.id, newTitle);
+            _apiQueue.CallApi(moveTicketRequest, (request, httpResponse) =>
+            {
+                if (!httpResponse.IsSuccess)
+                {
+                    _apiQueue.CancelAndClear();
+                    AppManager.OnUnexpectedApiCallException(this, request, null);
+                    return;
+                }
+            });
+        }
+
+        private void OnColumnAddTicketButtonClick(ColumnItem columnItem)
+        {
+            AppManager.GetReadyRootWindow<CreateTicketWindow, CreateTicketWindowController>().Open(columnItem.CreateTicketLocal);
+        }
+
         private void OnColumnDeleteButtonClick(ColumnItem columnItem)
         {
             _window.DeleteColumn(columnItem);
@@ -205,11 +235,6 @@ namespace RuKanban.App.Window
                     return;
                 }
             });
-        }
-
-        private void OnColumnAddTicketButtonClick(ColumnItem columnItem)
-        {
-            AppManager.GetReadyRootWindow<CreateTicketWindow, CreateTicketWindowController>().Open(columnItem.CreateTicketLocal);
         }
 
         private void OnColumnTicketClick(TicketItem ticketItem)

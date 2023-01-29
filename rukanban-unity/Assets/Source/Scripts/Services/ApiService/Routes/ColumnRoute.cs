@@ -25,6 +25,15 @@ namespace RuKanban.Services.Api.Routes
             request.SetJsonBody(JsonConvert.SerializeObject(requestBody));
             return request;
         }
+
+        public ApiRequest ChangeTitle(string columnId, string title)
+        {
+            var uri = GetUri($"/column.changeTitle?column_id={columnId}");
+            var request = new ApiRequest(uri, HTTPMethods.Post);
+            var requestBody = new ChangeColumnTitleReqBody(title);
+            request.SetJsonBody(JsonConvert.SerializeObject(requestBody));
+            return request;
+        }
         
         public ApiRequest DeleteColumn(string columnId)
         {

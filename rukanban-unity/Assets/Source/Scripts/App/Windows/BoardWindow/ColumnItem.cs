@@ -9,6 +9,8 @@ namespace RuKanban.App.Window
     public class ColumnItem : MonoBehaviour
     {
         public TextMeshProUGUI titleText;
+        public Button titleButton;
+        public TMP_InputField editTitleText;
         public Button deleteButton;
         public Button addTicketButton;
         
@@ -34,6 +36,9 @@ namespace RuKanban.App.Window
         public void ResetElements()
         {
             titleText.text = string.Empty;
+            titleButton.onClick.RemoveAllListeners();
+            editTitleText.gameObject.SetActive(false);
+            editTitleText.onEndEdit.RemoveAllListeners();
             deleteButton.onClick.RemoveAllListeners();
             addTicketButton.onClick.RemoveAllListeners();
             
