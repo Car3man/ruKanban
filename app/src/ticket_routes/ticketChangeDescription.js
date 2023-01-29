@@ -1,7 +1,7 @@
 const { workspaceHelper, ticketHelper, responseHelper } = require('../common/helpers');
 
 /**
- * Change ticket body business logic (safety)
+ * Change ticket description business logic (safety)
  * @param {import('express').Request} req
  * @param {import('express').Response} res
  */

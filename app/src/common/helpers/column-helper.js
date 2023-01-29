@@ -75,24 +75,12 @@ async function createColumn(boardId, title) {
 /**
  * @async
  * @param {BigInt} columnId
- * @param {Number} newIndex
- * @param {String} newTitle
+ * @param {String} title
  */
-async function updateColumn(columnId, newIndex, newTitle) {
-  return prisma.$transaction(async (tx) => {
-    if (newIndex) {
-      await tx.columns.update({
-        where: { id: columnId },
-        data: { index: newIndex },
-      });
-    }
-
-    if (newTitle) {
-      await tx.columns.update({
-        where: { id: columnId },
-        data: { title: newTitle },
-      });
-    }
+async function changeColumnTitle(columnId, title) {
+  return prisma.columns.update({
+    where: { id: columnId },
+    data: { title },
   });
 }
 
@@ -187,7 +175,7 @@ async function getColumnByTicketId(ticketId) {
 module.exports.isColumnTitleValid = isColumnTitleValid;
 module.exports.getNextColumnIndex = getNextColumnIndex;
 module.exports.createColumn = createColumn;
-module.exports.updateColumn = updateColumn;
+module.exports.changeColumnTitle = changeColumnTitle;
 module.exports.deleteColumn = deleteColumn;
 module.exports.getColumnsByBoardId = getColumnsByBoardId;
 module.exports.getColumnById = getColumnById;

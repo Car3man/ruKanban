@@ -1,16 +1,15 @@
 const { columnHelper, responseHelper, workspaceHelper } = require('../common/helpers');
 
 /**
- * Update column business logic (safety)
+ * Change column title business logic (safety)
  * @param {import('express').Request} req
  * @param {import('express').Response} res
  */
-const columnUpdate = async (req, res) => {
+const columnChangeTitle = async (req, res) => {
   try {
     const { userId } = req;
     const columnId = BigInt(req.query.column_id);
-    const newColumnIndex = req.body.index;
-    const newColumnTitle = req.body.title;
+    const { title } = req.body;
 
     const column = await columnHelper.getColumnById(columnId);
 
@@ -25,16 +24,14 @@ const columnUpdate = async (req, res) => {
       return responseHelper.sendForbidden(req, res);
     }
 
-    if (newColumnTitle) {
-      const titleValidationResult = columnHelper.isColumnTitleValid(newColumnTitle);
-      if (!titleValidationResult.isValid) {
-        return responseHelper.sendBadRequest(req, res, {
-          error_msg: titleValidationResult.details,
-        });
-      }
+    const titleValidationResult = columnHelper.isColumnTitleValid(title);
+    if (!titleValidationResult.isValid) {
+      return responseHelper.sendBadRequest(req, res, {
+        error_msg: titleValidationResult.details,
+      });
     }
 
-    await columnHelper.updateColumn(columnId, newColumnIndex, newColumnTitle);
+    await columnHelper.changeColumnTitle(columnId, title);
 
     return responseHelper.sendOk(req, res);
   } catch (err) {
@@ -43,4 +40,4 @@ const columnUpdate = async (req, res) => {
   }
 };
 
-module.exports = columnUpdate;
+module.exports = columnChangeTitle;
