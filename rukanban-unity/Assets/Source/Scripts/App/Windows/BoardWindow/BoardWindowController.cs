@@ -219,33 +219,49 @@ namespace RuKanban.App.Window
             AppManager.GetReadyRootWindow<TicketWindow, TicketWindowController>().Open(ticket.id);
         }
 
-        private void OnColumnTicketMove(ColumnItem oldColumnItem, TicketItem ticketItem, ColumnItem newColumnItem, TicketItem insertAfterItem)
+        private void OnColumnTicketMove(ColumnItem oldColumnItem, TicketItem ticketItem, ColumnItem newColumnItem, TicketItem standAfterItem)
         {
             Ticket ticketToMove = _ticketsBindings[ticketItem];
             Column moveToColumn = _columnsBindings[newColumnItem];
-            Ticket insertAfterTicket = insertAfterItem != null ? _ticketsBindings[insertAfterItem] : null;
+            Ticket standAfterTicket = standAfterItem != null ? _ticketsBindings[standAfterItem] : null;
             
             string ticketId = ticketToMove.id;
             string columnId = moveToColumn.id;
-            int ticketIndex = insertAfterTicket != null ? insertAfterTicket.index + 1 : 0;
+            string standAfterId = standAfterTicket != null ? standAfterTicket.id : "";
 
+            // remove from old column
             _columnTicketBindings[oldColumnItem].Remove(ticketItem);
-            int insertIndex = insertAfterItem != null ? _columnTicketBindings[newColumnItem].IndexOf(insertAfterItem) + 1 : 0;
+            oldColumnItem.RemoveTicket(ticketItem);
+            
+            // resort column tickets locally
+            int standAfterIndex = -1;
+            int indexOffset = string.IsNullOrEmpty(standAfterId) ? 1 : 0;
             List<Ticket> ticketsToUpdateIndex = _columnTicketBindings[newColumnItem]
                 .Select(x => _ticketsBindings[x])
-                .Where(x => x.index >= ticketIndex)
-                .OrderByDescending(x => x.index)
                 .ToList();
-            for (int i = 0; i < ticketsToUpdateIndex.Count; i++)
+            for (var i = 0; i < ticketsToUpdateIndex.Count; i++)
             {
-                ticketsToUpdateIndex[i].index = ticketIndex + (ticketsToUpdateIndex.Count - i);
+                string id = ticketsToUpdateIndex[i].id;
+
+                if (id != ticketId)
+                {
+                    ticketsToUpdateIndex[i].index = i + indexOffset;
+
+                    if (id == standAfterId)
+                    {
+                        standAfterIndex = ticketsToUpdateIndex[i].index;
+                        indexOffset++;
+                    }
+                }
             }
-            _columnTicketBindings[newColumnItem].Insert(insertIndex, ticketItem);
-            ticketToMove.column_id = columnId;
-            ticketToMove.index = ticketIndex;
-            newColumnItem.TakeTicket(ticketItem, insertAfterItem);
             
-            ApiRequest moveTicketRequest = AppManager.ApiService.Ticket.MoveTicket(ticketId, columnId, ticketIndex);
+            // insert to new column with new index
+            _columnTicketBindings[newColumnItem].Insert(_columnTicketBindings[newColumnItem].IndexOf(standAfterItem) + 1, ticketItem);
+            ticketToMove.column_id = columnId;
+            ticketToMove.index = standAfterIndex + 1;
+            newColumnItem.AddTicket(ticketItem, standAfterItem);
+            
+            ApiRequest moveTicketRequest = AppManager.ApiService.Ticket.MoveTicket(ticketId, columnId, standAfterId);
             _apiQueue.CallApi(moveTicketRequest, (request, httpResponse) =>
             {
                 if (!httpResponse.IsSuccess)

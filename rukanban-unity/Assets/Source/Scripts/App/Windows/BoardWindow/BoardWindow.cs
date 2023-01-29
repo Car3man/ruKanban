@@ -168,13 +168,13 @@ namespace RuKanban.App.Window
 
                     if (isOverColumn)
                     {
-                        if (_currDragTicketColumnOver != null)
+                        if (_currDragTicketColumnOver != null && _currDragTicketColumnOver != anotherColumnItem)
                         {
                             _currDragTicketColumnOver.SetTicketPlaceholderActive(false);
                         }
                         
-                        CalculateTicketIndexInColumn(dragTicket, anotherColumnItem, out var insertAfterItem);
-                        int siblingIndex = insertAfterItem != null ? insertAfterItem.transform.GetSiblingIndex() : 0;
+                        CalculateTicketIndexInColumn(dragTicket, anotherColumnItem, out var standAfterItem);
+                        int siblingIndex = standAfterItem != null ? standAfterItem.transform.GetSiblingIndex() + 1 : 0;
                         
                         _currDragTicketColumnOver = anotherColumnItem;
                         _currDragTicketColumnOver.SetTicketPlaceholderActive(true, siblingIndex, ticketItem.Height);
@@ -202,8 +202,8 @@ namespace RuKanban.App.Window
                 }
                 else
                 {
-                    CalculateTicketIndexInColumn(dragTicket, _currDragTicketColumnOver, out var insertAfterItem);
-                    OnColumnTicketMove?.Invoke(previousColumnItem, dragTicket, _currDragTicketColumnOver, insertAfterItem);
+                    CalculateTicketIndexInColumn(dragTicket, _currDragTicketColumnOver, out var standAfterItem);
+                    OnColumnTicketMove?.Invoke(previousColumnItem, dragTicket, _currDragTicketColumnOver, standAfterItem);
                 }
                 
                 dragTicketRT.anchorMin = _currDragTicketOldAnchorMin;
@@ -214,7 +214,7 @@ namespace RuKanban.App.Window
             }
         }
 
-        private void CalculateTicketIndexInColumn(TicketItem ticketItem, ColumnItem columnItem, out TicketItem insertAfterItem)
+        private void CalculateTicketIndexInColumn(TicketItem ticketItem, ColumnItem columnItem, out TicketItem standAfterItem)
         {
             var ticketItemRT = ticketItem.GetComponent<RectTransform>();
             var ticketItemParentRT = columnItem.TicketItemsParent.GetComponent<RectTransform>();
@@ -227,7 +227,7 @@ namespace RuKanban.App.Window
 
             float ticketCenter = (ticketItemWorldCorners[0].y + ticketItemWorldCorners[1].y) / 2f;
             
-            insertAfterItem = null;
+            standAfterItem = null;
             
             for (var i = columnItem.currTicketItems.Count - 1; i >= 0; i--)
             {
@@ -241,7 +241,7 @@ namespace RuKanban.App.Window
 
                 if (ticketCenter < columnTicketItemCenter)
                 {
-                    insertAfterItem = columnTicketItem;
+                    standAfterItem = columnTicketItem;
                     break;
                 }
             }

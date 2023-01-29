@@ -2,6 +2,7 @@
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using DG.Tweening;
 
 namespace RuKanban.App.Window
 {
@@ -39,12 +40,18 @@ namespace RuKanban.App.Window
 
         public void HandleBeginDrag(BaseEventData eventData)
         {
+            transform
+                .DOLocalRotate(Vector3.forward * 5f, 0.2f);
+
             _pointerDownValid = false;
             OnBeginDrag?.Invoke(this);
         }
 
         public void HandleEndDrag(BaseEventData eventData)
         {
+            transform
+                .DOLocalRotate(Vector3.zero, 0.1f);
+
             OnEndDrag?.Invoke(this);
         }
     }

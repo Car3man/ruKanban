@@ -101,9 +101,9 @@ namespace RuKanban.App.Window
             itemPlaceholder.SetHeight(height);
         }
 
-        public void TakeTicket(TicketItem ticketItem, TicketItem insertAfter)
+        public void AddTicket(TicketItem ticketItem, TicketItem standAfterItem)
         {
-            int siblingIndex = insertAfter != null ? insertAfter.transform.GetSiblingIndex() + 1 : 0;
+            int siblingIndex = standAfterItem != null ? standAfterItem.transform.GetSiblingIndex() + 1 : 0;
             
             ticketItem.transform.SetParent(itemParent);
             ticketItem.transform.SetSiblingIndex(siblingIndex);
@@ -113,8 +113,14 @@ namespace RuKanban.App.Window
             ticketItem.OnBeginDrag = item => OnTicketItemBeginDrag?.Invoke(item);
             ticketItem.OnEndDrag = item => OnTicketItemEndDrag?.Invoke(item);
 
-            int insertAfterIndex = currTicketItems.IndexOf(insertAfter) + 1;
-            currTicketItems.Insert(insertAfterIndex, ticketItem);
+            int standAfterIndex = currTicketItems.IndexOf(standAfterItem) + 1;
+            currTicketItems.Insert(standAfterIndex, ticketItem);
+        }
+
+        public void RemoveTicket(TicketItem ticketItem)
+        {
+            ticketItem.transform.SetParent(null);
+            currTicketItems.Remove(ticketItem);
         }
     }
 }

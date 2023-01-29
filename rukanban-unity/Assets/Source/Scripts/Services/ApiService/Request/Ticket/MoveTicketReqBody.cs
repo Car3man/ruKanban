@@ -3,12 +3,12 @@
     public class MoveTicketReqBody
     {
         public string column_id;
-        public int index;
+        public string stand_after_id;
 
-        public MoveTicketReqBody(string columnID, int index)
+        public MoveTicketReqBody(string columnID, string standAfterId)
         {
             column_id = columnID;
-            this.index = index;
+            stand_after_id = standAfterId;
         }
     }
 }
