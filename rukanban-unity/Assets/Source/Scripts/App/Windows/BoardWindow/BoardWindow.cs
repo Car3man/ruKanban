@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using RuKanban.Services.Api.DatabaseModels;
 using RuKanban.Utils;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
+// ReSharper disable All
 
 namespace RuKanban.App.Window
 {
@@ -31,12 +33,14 @@ namespace RuKanban.App.Window
         public delegate void ColumnTicketClickDelegate(TicketItem ticketItem);
         public delegate void ColumnTicketMoveDelegate(ColumnItem oldColumnItem, TicketItem ticketItem,
             ColumnItem newColumnItem, TicketItem insertAfterItem);
+        public delegate void ColumnTitleChangeDelegate(ColumnItem columnItem, string newTitle);
         public delegate void ColumnDeleteButtonClickDelegate(ColumnItem columnItem);
         public delegate void ColumnAddTicketButtonClickDelegate(ColumnItem columnItem);
         
         public ColumnItemReadyDelegate OnColumnItemReady;
         public ColumnTicketClickDelegate OnColumnTicketClick;
         public ColumnTicketMoveDelegate OnColumnTicketMove;
+        public ColumnTitleChangeDelegate OnColumnTitleChange;
         public ColumnDeleteButtonClickDelegate OnColumnDeleteButtonClick;
         public ColumnAddTicketButtonClickDelegate OnColumnAddTicketButtonClick;
 
@@ -65,6 +69,7 @@ namespace RuKanban.App.Window
             OnColumnItemReady = null;
             OnColumnTicketClick = null;
             OnColumnTicketMove = null;
+            OnColumnTitleChange = null;
             OnColumnDeleteButtonClick = null;
             OnColumnAddTicketButtonClick = null;
         }
@@ -117,6 +122,8 @@ namespace RuKanban.App.Window
             
             columnItem.ResetElements();
             columnItem.titleText.text = column.title;
+            columnItem.titleButton.onClick.AddListener(() => OnColumnTitleButtonClick(columnItem));
+            columnItem.editTitleText.onEndEdit.AddListener((newTitle) => OnColumnTitleInputEndEdit(columnItem, newTitle));
             columnItem.deleteButton.onClick.AddListener(() => OnColumnDeleteButtonClick?.Invoke(columnItem));
             columnItem.addTicketButton.onClick.AddListener(() => OnColumnAddTicketButtonClick?.Invoke(columnItem));
             columnItem.OnTicketItemClick = ticketItem => { OnColumnTicketClick?.Invoke(ticketItem); };
@@ -127,6 +134,23 @@ namespace RuKanban.App.Window
             currColumnItems.Add(columnItem);
 
             return columnItem;
+        }
+
+        private void OnColumnTitleButtonClick(ColumnItem columnItem)
+        {
+            columnItem.titleText.gameObject.SetActive(false);
+            columnItem.deleteButton.gameObject.SetActive(false);
+            columnItem.editTitleText.gameObject.SetActive(true);
+            columnItem.editTitleText.text = columnItem.titleText.text;
+            EventSystem.current.SetSelectedGameObject(columnItem.editTitleText.gameObject);
+        }
+
+        private void OnColumnTitleInputEndEdit(ColumnItem columnItem, string newTitle)
+        {
+            columnItem.titleText.gameObject.SetActive(true);
+            columnItem.deleteButton.gameObject.SetActive(true);
+            columnItem.editTitleText.gameObject.SetActive(false);
+            OnColumnTitleChange?.Invoke(columnItem, newTitle);
         }
 
         private void OnTicketItemBeginDrag(ColumnItem previousColumnItem, TicketItem ticketItem)

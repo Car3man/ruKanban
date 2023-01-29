@@ -10,5 +10,22 @@ namespace RuKanban.Services.Api.DatabaseModels
         public int index;
         public string title;
         public string created_at;
+        
+        public static bool IsTitleValid(string title)
+        {
+            string trimmedTitle = title.Trim();
+
+            if (trimmedTitle.Length < 1)
+            {
+                return false;
+            }
+
+            if (trimmedTitle.Length > 36)
+            {
+                return false;
+            }
+
+            return true;
+        }
     }
 }
