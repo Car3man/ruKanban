@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using BestHTTP;
 using Newtonsoft.Json;
 using RuKanban.Services.Api;
@@ -9,7 +8,6 @@ using RuKanban.Services.Api.DatabaseModels;
 using RuKanban.Services.Api.Exceptions;
 using RuKanban.Services.Api.Response.Column;
 using RuKanban.Services.Api.Response.Ticket;
-using UnityEngine;
 
 namespace RuKanban.App.Window
 {
@@ -95,6 +93,7 @@ namespace RuKanban.App.Window
             _window.OnColumnTitleChange = OnColumnTitleChange;
             _window.OnColumnAddTicketButtonClick = OnColumnAddTicketButtonClick;
             _window.OnColumnDeleteButtonClick = OnColumnDeleteButtonClick;
+            _window.OnColumnMove = OnColumnMove;
             _window.SetColumns(getColumnsJsonResponse.columns);
         }
 
@@ -227,6 +226,55 @@ namespace RuKanban.App.Window
             Column column = _columnsBindings[columnItem];
             ApiRequest deleteColumnRequest = AppManager.ApiService.Column.DeleteColumn(column.id);
             _apiQueue.CallApi(deleteColumnRequest, (request, httpResponse) =>
+            {
+                if (!httpResponse.IsSuccess)
+                {
+                    _apiQueue.CancelAndClear();
+                    AppManager.OnUnexpectedApiCallException(this, request, null);
+                    return;
+                }
+            });
+        }
+
+        private void OnColumnMove(ColumnItem columnItem, ColumnItem standAfterItem)
+        {
+            Column columnToMove = _columnsBindings[columnItem];
+            Column standAfterColumn = standAfterItem != null ? _columnsBindings[standAfterItem] : null;
+
+            string columnId = columnToMove.id;
+            string standAfterId = standAfterColumn != null ? standAfterColumn.id : "";
+            
+            // remove old column
+            _window.RemoveColumn(columnItem);
+            
+            // resort columns
+            int standAfterIndex = -1;
+            int indexOffset = string.IsNullOrEmpty(standAfterId) ? 1 : 0;
+            List<Column> columnsToUpdateIndex = _window.currColumnItems
+                .Select(x => _columnsBindings[x])
+                .ToList();
+            for (var i = 0; i < columnsToUpdateIndex.Count; i++)
+            {
+                string id = columnsToUpdateIndex[i].id;
+
+                if (id != columnId)
+                {
+                    columnsToUpdateIndex[i].index = i + indexOffset;
+
+                    if (id == standAfterId)
+                    {
+                        standAfterIndex = columnsToUpdateIndex[i].index;
+                        indexOffset++;
+                    }
+                }
+            }
+            
+            // insert new column with new index
+            columnToMove.index = standAfterIndex + 1;
+            _window.AddColumn(columnItem, standAfterItem);
+            
+            ApiRequest moveColumnRequest = AppManager.ApiService.Column.MoveColumn(columnId, standAfterId);
+            _apiQueue.CallApi(moveColumnRequest, (request, httpResponse) =>
             {
                 if (!httpResponse.IsSuccess)
                 {

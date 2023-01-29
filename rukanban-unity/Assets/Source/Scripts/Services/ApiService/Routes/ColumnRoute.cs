@@ -35,6 +35,15 @@ namespace RuKanban.Services.Api.Routes
             return request;
         }
         
+        public ApiRequest MoveColumn(string columnId, string standAfterId)
+        {
+            var uri = GetUri($"/column.move?column_id={columnId}");
+            var request = new ApiRequest(uri, HTTPMethods.Post);
+            var requestBody = new MoveColumnReqBody(standAfterId);
+            request.SetJsonBody(JsonConvert.SerializeObject(requestBody));
+            return request;
+        }
+        
         public ApiRequest DeleteColumn(string columnId)
         {
             var uri = GetUri($"/column.delete?column_id={columnId}");
