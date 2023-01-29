@@ -9,19 +9,22 @@ services:
       - ./db:/var/lib/postgresql/data
     networks:
       - net
-  web-server:
-    build: ./web-server
-    ports:
-      - 80:80
-    networks:
-      - net
   app:
     build: ./app
     volumes:
       - ./app:/app
     networks:
       - net
-
+    depends_on:
+      - db
+  web-server:
+    build: ./web-server
+    ports:
+      - 80:80
+    networks:
+      - net
+    depends_on:
+      - app
 networks:
   net:
     driver: bridge
