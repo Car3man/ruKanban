@@ -157,7 +157,7 @@ namespace RuKanban.App.Window
         {
             transform
                 .DOLocalRotate(Vector3.forward * 5f, 0.2f);
-            
+
             OnBeginDrag?.Invoke(this);
         }
 
