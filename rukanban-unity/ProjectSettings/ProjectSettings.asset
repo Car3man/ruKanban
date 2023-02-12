@@ -768,7 +768,7 @@ PlayerSettings:
   webGLDecompressionFallback: 0
   webGLPowerPreference: 2
   scriptingDefineSymbols:
-    Android: LETAI_TRUESHADOW
+    Android: LETAI_TRUESHADOW;JSON_NET_EXISTS;TMPRO_EXISTS;TRUESHADOW_EXISTS;PUI_EXISTS
   additionalCompilerArguments: {}
   platformArchitecture: {}
   scriptingBackend:
