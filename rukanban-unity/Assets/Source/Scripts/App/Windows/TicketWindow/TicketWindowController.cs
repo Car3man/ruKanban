@@ -67,8 +67,6 @@ namespace RuKanban.App.Window
 
         private async void OnTicketDeleteButtonClick()
         {
-            throw new NotImplementedException();
-            
             var loadingWindow = AppManager.CreateAndShowWindow<LoadingWindow, LoadingWindowController>(AppManager.Windows.Root);
             
             ApiRequest deleteTicketRequest = AppManager.ApiService.Ticket.DeleteTicket(_ticketId);
@@ -106,13 +104,12 @@ namespace RuKanban.App.Window
             
             _window.Hide(false, true);
             
+            // TODO: do local changes, instead force reopen board window
             AppManager.GetReadyRootWindow<BoardWindow, BoardWindowController>().Reopen();
         }
 
         private async void OnTicketSaveButtonClick()
         {
-            throw new NotImplementedException();
-            
             var loadingWindow = AppManager.CreateAndShowWindow<LoadingWindow, LoadingWindowController>(AppManager.Windows.Root);
             
             string newTitle = _window.titleInput.text;
@@ -184,6 +181,7 @@ namespace RuKanban.App.Window
             
             _window.Hide(false, true);
             
+            // TODO: do local changes, instead force reopen board window
             AppManager.GetReadyRootWindow<BoardWindow, BoardWindowController>().Reopen();
         }
     }
