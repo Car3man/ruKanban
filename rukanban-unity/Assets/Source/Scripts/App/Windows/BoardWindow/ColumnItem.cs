@@ -99,10 +99,10 @@ namespace RuKanban.App.Window
             ticketItem.gameObject.SetActive(true);
 
             ticketItem.titleText.text = ticket.title;
-            ticketItem.OnClick = item => OnTicketItemClick?.Invoke(item);
-            ticketItem.OnDrag = item => OnTicketItemDrag?.Invoke(item);
-            ticketItem.OnBeginDrag = item => OnTicketItemBeginDrag?.Invoke(item);
-            ticketItem.OnEndDrag = item => OnTicketItemEndDrag?.Invoke(item);
+            ticketItem.OnClickEvent = item => OnTicketItemClick?.Invoke(item);
+            ticketItem.OnDragEvent = item => OnTicketItemDrag?.Invoke(item);
+            ticketItem.OnBeginDragEvent = item => OnTicketItemBeginDrag?.Invoke(item);
+            ticketItem.OnEndDragEvent = item => OnTicketItemEndDrag?.Invoke(item);
 
             currTicketItems.Add(ticketItem);
 
@@ -133,10 +133,10 @@ namespace RuKanban.App.Window
             ticketItem.transform.SetParent(itemParent);
             ticketItem.transform.SetSiblingIndex(siblingIndex);
             
-            ticketItem.OnClick = item => OnTicketItemClick?.Invoke(item);
-            ticketItem.OnDrag = item => OnTicketItemDrag?.Invoke(item);
-            ticketItem.OnBeginDrag = item => OnTicketItemBeginDrag?.Invoke(item);
-            ticketItem.OnEndDrag = item => OnTicketItemEndDrag?.Invoke(item);
+            ticketItem.OnClickEvent = item => OnTicketItemClick?.Invoke(item);
+            ticketItem.OnDragEvent = item => OnTicketItemDrag?.Invoke(item);
+            ticketItem.OnBeginDragEvent = item => OnTicketItemBeginDrag?.Invoke(item);
+            ticketItem.OnEndDragEvent = item => OnTicketItemEndDrag?.Invoke(item);
 
             int standAfterIndex = currTicketItems.IndexOf(standAfterItem) + 1;
             currTicketItems.Insert(standAfterIndex, ticketItem);

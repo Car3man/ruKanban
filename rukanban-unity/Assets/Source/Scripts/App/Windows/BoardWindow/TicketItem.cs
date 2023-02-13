@@ -6,53 +6,53 @@ using DG.Tweening;
 
 namespace RuKanban.App.Window
 {
-    public class TicketItem : MonoBehaviour
+    public class TicketItem : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDragHandler, IBeginDragHandler, IEndDragHandler
     {
         public TextMeshProUGUI titleText;
         public RectTransform overlapTrigger;
         
-        public Action<TicketItem> OnClick;
-        public Action<TicketItem> OnDrag;
-        public Action<TicketItem> OnBeginDrag;
-        public Action<TicketItem> OnEndDrag;
+        public Action<TicketItem> OnClickEvent;
+        public Action<TicketItem> OnDragEvent;
+        public Action<TicketItem> OnBeginDragEvent;
+        public Action<TicketItem> OnEndDragEvent;
         
         public float Height => GetComponent<RectTransform>().rect.height;
 
         private bool _pointerDownValid;
-
-        public void HandlePointerDown(BaseEventData eventData)
+        
+        public void OnPointerDown(PointerEventData eventData)
         {
             _pointerDownValid = true;
         }
 
-        public void HandlePointerUp(BaseEventData eventData)
+        public void OnPointerUp(PointerEventData eventData)
         {
             if (_pointerDownValid)
             {
-                OnClick?.Invoke(this);
+                OnClickEvent?.Invoke(this);
             }
         }
 
-        public void HandleOnDrag(BaseEventData eventData)
+        public void OnDrag(PointerEventData eventData)
         {
-            OnDrag?.Invoke(this);
+            OnDragEvent?.Invoke(this);
         }
 
-        public void HandleBeginDrag(BaseEventData eventData)
+        public void OnBeginDrag(PointerEventData eventData)
         {
             transform
                 .DOLocalRotate(Vector3.forward * 5f, 0.2f);
 
             _pointerDownValid = false;
-            OnBeginDrag?.Invoke(this);
+            OnBeginDragEvent?.Invoke(this);
         }
 
-        public void HandleEndDrag(BaseEventData eventData)
+        public void OnEndDrag(PointerEventData eventData)
         {
             transform
                 .DOLocalRotate(Vector3.zero, 0.1f);
 
-            OnEndDrag?.Invoke(this);
+            OnEndDragEvent?.Invoke(this);
         }
     }
 }
