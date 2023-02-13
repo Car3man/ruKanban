@@ -11,8 +11,8 @@ namespace RuKanban.App.Window
     {
         private readonly AuthorizationWindow _window;
         
-        private SignInTab SignInTab => _window.signInTab;
-        private SignUpTab SignUpTab => _window.signUpTab;
+        private LoginPanel LoginPanel => _window.loginPanel;
+        private RegistrationPanel RegistrationPanel => _window.registrationPanel;
         
         public AuthorizationWindowController(AppManager appManager, AuthorizationWindow window) 
             : base(appManager, window)
@@ -30,28 +30,28 @@ namespace RuKanban.App.Window
             
             _window.Show(false);
             
-            SignInTab.gameObject.SetActive(false);
-            SignUpTab.gameObject.SetActive(false);
+            LoginPanel.gameObject.SetActive(false);
+            RegistrationPanel.gameObject.SetActive(false);
             
             ShowSignInWindow();
         }
 
         private void ShowSignInWindow()
         {
-            if (SignUpTab.gameObject.activeSelf)
+            if (RegistrationPanel.gameObject.activeSelf)
             {
-                SignUpTab.ResetElements();
-                SignUpTab.gameObject.SetActive(false);
+                RegistrationPanel.ResetElements();
+                RegistrationPanel.gameObject.SetActive(false);
             }
 
-            if (SignInTab.gameObject.activeSelf)
+            if (LoginPanel.gameObject.activeSelf)
             {
                 return;
             }
             
-            SignInTab.signUpButton.onClick.AddListener(SignInWindow_OnSignUpButtonClick);
-            SignInTab.signInButton.onClick.AddListener(SignInWindow_OnSignInButtonClick);
-            SignInTab.gameObject.SetActive(true);
+            LoginPanel.signUpButton.onClick.AddListener(SignInWindow_OnSignUpButtonClick);
+            LoginPanel.signInButton.onClick.AddListener(SignInWindow_OnSignInButtonClick);
+            LoginPanel.gameObject.SetActive(true);
         }
 
         private void SignInWindow_OnSignUpButtonClick()
@@ -63,8 +63,8 @@ namespace RuKanban.App.Window
         {
             var loadingWindow = AppManager.CreateAndShowWindow<LoadingWindow, LoadingWindowController>(AppManager.Windows.Root);
    
-            string login = SignInTab.loginInput.text;
-            string password = SignInTab.passwordInput.text;
+            string login = LoginPanel.loginInput.text;
+            string password = LoginPanel.passwordInput.text;
             
             ApiRequest signInRequest = AppManager.ApiService.Auth.SignIn(login, password);
             HTTPResponse signInResponse;
@@ -110,20 +110,20 @@ namespace RuKanban.App.Window
         
         private void ShowSignUpWindow()
         {
-            if (SignInTab.gameObject.activeSelf)
+            if (LoginPanel.gameObject.activeSelf)
             {
-                SignInTab.ResetElements();
-                SignInTab.gameObject.SetActive(false);
+                LoginPanel.ResetElements();
+                LoginPanel.gameObject.SetActive(false);
             }
             
-            if (SignUpTab.gameObject.activeSelf)
+            if (RegistrationPanel.gameObject.activeSelf)
             {
                 return;
             }
             
-            SignUpTab.signInButton.onClick.AddListener(SignUpWindow_OnSignInButtonClick);
-            SignUpTab.signUpButton.onClick.AddListener(SignUpWindow_OnSignUpButtonClick);
-            SignUpTab.gameObject.SetActive(true);
+            RegistrationPanel.signInButton.onClick.AddListener(SignUpWindow_OnSignInButtonClick);
+            RegistrationPanel.signUpButton.onClick.AddListener(SignUpWindow_OnSignUpButtonClick);
+            RegistrationPanel.gameObject.SetActive(true);
         }
         
         private void SignUpWindow_OnSignInButtonClick()
@@ -135,13 +135,15 @@ namespace RuKanban.App.Window
         {
             var loadingWindow = AppManager.CreateAndShowWindow<LoadingWindow, LoadingWindowController>(AppManager.Windows.Root);
    
-            string login = SignUpTab.loginInput.text;
-            string password = SignUpTab.passwordInput.text;
-            string firstName = SignUpTab.firstNameInput.text;
-            string surName = SignUpTab.surNameInput.text;
-            string patronymic = SignUpTab.patronymicInput.text;
+            string login = RegistrationPanel.loginInput.text;
+            string password = RegistrationPanel.passwordInput.text;
+            string passwordAgain = RegistrationPanel.passwordAgainInput.text;
+            string firstName = RegistrationPanel.firstNameInput.text;
+            string lastNameInput = RegistrationPanel.lastNameInput.text;
             
-            ApiRequest signUpRequest = AppManager.ApiService.Auth.SignUp(login, password, firstName, surName, patronymic);
+            // TODO: check if password equals to password again
+            
+            ApiRequest signUpRequest = AppManager.ApiService.Auth.SignUp(login, password, firstName, lastNameInput);
             HTTPResponse signUpResponse;
             
             try { signUpResponse = await signUpRequest.GetHTTPResponseAsync(); }

@@ -4,7 +4,7 @@ using UnityEngine.UI;
 
 namespace RuKanban.App.Window
 {
-    public class SignInTab : MonoBehaviour
+    public class LoginPanel : MonoBehaviour
     {
         public TMP_InputField loginInput;
         public TMP_InputField passwordInput;

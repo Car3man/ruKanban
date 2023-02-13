@@ -103,7 +103,6 @@ GameObject:
   - component: {fileID: 700546613496395658}
   - component: {fileID: 700546613496395659}
   - component: {fileID: 700546613496395637}
-  - component: {fileID: 700546613496395636}
   m_Layer: 5
   m_Name: SyncIcon
   m_TagString: Untagged
@@ -152,7 +151,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.29411766, g: 0.7490196, b: 0.41960785, a: 1}
+  m_Color: {r: 0, g: 0.5019608, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -185,19 +184,6 @@ Animation:
   m_PlayAutomatically: 1
   m_AnimatePhysics: 0
   m_CullingType: 0
---- !u!114 &700546613496395636
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 700546613496395657}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cf1796db0c57c2e49a1970ea33f8e59f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  key: primary
 --- !u!1 &700546613627165701
 GameObject:
   m_ObjectHideFlags: 0

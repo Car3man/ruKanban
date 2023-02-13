@@ -12,11 +12,11 @@ namespace RuKanban.Services.Api.Routes
         }
         
         public ApiRequest SignUp(string login,
-            string password, string firstName, string surName, string patronymic)
+            string password, string firstName, string surName)
         {
             var uri = GetUri("/auth.signUp");
             var request = new ApiRequest(uri, HTTPMethods.Post);
-            var requestBody = new SignUpReqBody(login, password, firstName, surName, patronymic);
+            var requestBody = new SignUpReqBody(login, password, firstName, surName);
             request.SetJsonBody(JsonConvert.SerializeObject(requestBody));
             return request;
         }

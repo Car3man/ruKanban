@@ -5,16 +5,14 @@
         public string login;
         public string password;
         public string first_name;
-        public string sur_name;
-        public string patronymic;
+        public string sur_name; // TODO: rename to last name
 
-        public SignUpReqBody(string login, string password, string firstName, string surName, string patronymic)
+        public SignUpReqBody(string login, string password, string firstName, string lastName)
         {
             this.login = login;
             this.password = password;
             first_name = firstName;
-            sur_name = surName;
-            this.patronymic = patronymic;
+            sur_name = lastName;
         }
     }
 }

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using RuKanban.Services.Api.DatabaseModels;
 using RuKanban.Utils;
+using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -14,9 +15,10 @@ namespace RuKanban.App.Window
         private const float COLUMN_WIDTH = 250;
         
         public BoardWindowHeader header;
+        public TextMeshProUGUI currentPathText;
         public Button addColumnButton;
         public RectTransform dragAndDropParent;
-        
+
         [SerializeField] private GameObject itemTemplate;
         [SerializeField] private Transform itemParent;
         [SerializeField] private GameObject addColumnContainer;
@@ -68,6 +70,8 @@ namespace RuKanban.App.Window
             
             header.ResetElements();
             addColumnButton.onClick.RemoveAllListeners();
+
+            currentPathText.text = string.Empty;
             
             itemTemplate.gameObject.SetActive(false);
             itemPlaceholder.gameObject.SetActive(false);

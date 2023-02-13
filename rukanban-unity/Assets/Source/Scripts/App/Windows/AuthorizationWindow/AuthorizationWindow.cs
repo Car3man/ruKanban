@@ -2,8 +2,8 @@
 {
     public class AuthorizationWindow : BaseAppWindow
     {
-        public SignInTab signInTab;
-        public SignUpTab signUpTab;
+        public LoginPanel loginPanel;
+        public RegistrationPanel registrationPanel;
 
         protected override void HideWindow(bool force)
         {
@@ -13,8 +13,8 @@
 
         public override void ResetElements()
         {
-            signInTab.ResetElements();
-            signUpTab.ResetElements();
+            loginPanel.ResetElements();
+            registrationPanel.ResetElements();
         }
     }
 }

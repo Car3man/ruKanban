@@ -46,3 +46,8 @@ MonoBehaviour:
     spread: 0
     distance: 29
     alpha: 0.15
+  - name: curr
+    size: 8
+    spread: 0
+    distance: 7
+    alpha: 0.15
