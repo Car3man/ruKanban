@@ -16,7 +16,6 @@ const authSignUp = async (req, res) => {
     const { password } = req.body;
     const firstName = req.body.first_name;
     const surName = req.body.sur_name;
-    const { patronymic } = req.body;
 
     const isUserExist = await prisma.users.count({
       where: { login },
@@ -47,7 +46,7 @@ const authSignUp = async (req, res) => {
       password_hash: md5(password),
       first_name: firstName,
       sur_name: surName,
-      patronymic,
+      patronymic: '',
       roles: {
         connect: { name: 'user' },
       },
