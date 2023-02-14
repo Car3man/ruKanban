@@ -41,7 +41,15 @@ namespace RuKanban.Services.AppConfiguration
         {
             get
             {
-#if (!UNITY_EDITOR && (UNITY_ANDROID || UNITY_IOS)) || FORCE_MOBILE
+#if FORCE_MOBILE
+                return true;
+#endif
+                
+#if UNITY_EDITOR
+                return false;
+#endif
+                
+#if UNITY_ANDROID || UNITY_IOS
                 return true;
 #endif
                 return false;
