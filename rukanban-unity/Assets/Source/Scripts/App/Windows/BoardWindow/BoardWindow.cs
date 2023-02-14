@@ -1,5 +1,6 @@
 // ReSharper disable All
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using RuKanban.Services.Api.DatabaseModels;
 using RuKanban.Utils;
@@ -12,17 +13,21 @@ namespace RuKanban.App.Window
 {
     public class BoardWindow : BaseAppWindow
     {
-        private const float COLUMN_WIDTH = 250;
-        
         public BoardWindowHeader header;
         public TextMeshProUGUI currentPathText;
         public Button addColumnButton;
         public RectTransform dragAndDropParent;
 
+        [SerializeField] private float columnWidth = 250;
         [SerializeField] private GameObject itemTemplate;
         [SerializeField] private Transform itemParent;
+        [SerializeField] private ScrollRect itemScroll;
         [SerializeField] private GameObject addColumnContainer;
         [SerializeField] private ColumnItemPlaceholder itemPlaceholder;
+        [SerializeField] private float autoScrollColumnMoveThreshold = 0.1f;
+        [SerializeField] private float autoScrollColumnMoveSpeed = 1f;
+        [SerializeField] private float autoScrollTicketMoveThreshold = 0.1f;
+        [SerializeField] private float autoScrollTicketMoveSpeed = 1f;
         
         public List<ColumnItem> currColumnItems;
 
@@ -56,6 +61,68 @@ namespace RuKanban.App.Window
         public ColumnAddTicketButtonClickDelegate OnColumnAddTicketButtonClick;
         public ColumnMoveDelegate OnColumnMove;
 
+        private void Update()
+        {
+            if (_isCurrDragColumn)
+            {
+                float screenWidth = Screen.width;
+                float mouseXPercent = Input.mousePosition.x / screenWidth;
+                
+                if (mouseXPercent < autoScrollColumnMoveThreshold)
+                {
+                    if (itemScroll.horizontalNormalizedPosition > 0)
+                    {
+                        itemScroll.horizontalNormalizedPosition -= autoScrollColumnMoveSpeed * Time.deltaTime;
+                    }
+                } 
+                else if (mouseXPercent > 1f - autoScrollColumnMoveThreshold)
+                {
+                    if (itemScroll.horizontalNormalizedPosition < 1f)
+                    {
+                        itemScroll.horizontalNormalizedPosition += autoScrollColumnMoveSpeed * Time.deltaTime;
+                    }
+                }
+            }
+
+            if (_isCurrDragTicket && _currDragTicketColumnOver != null)
+            {
+                var ticketItemRT = _currDragTicket.Item2.GetComponent<RectTransform>();
+                var ticketItemParentRT = _currDragTicket.Item1.TicketItemsParent.GetComponent<RectTransform>();
+
+                var ticketItemWorldCorners = new Vector3[4];
+                ticketItemRT.GetWorldCorners(ticketItemWorldCorners);
+            
+                var ticketItemParentWorldCorners = new Vector3[4];
+                ticketItemParentRT.GetWorldCorners(ticketItemParentWorldCorners);
+
+                float ticketTop = ticketItemWorldCorners[1].y;
+                float ticketBot = ticketItemWorldCorners[0].y;
+                float ticketCenter = (ticketTop + ticketBot) / 2f;
+
+                float ticketItemParentTop = ticketItemParentWorldCorners[1].y;
+                float ticketItemParentBot = ticketItemParentWorldCorners[0].y;
+                float ticketItemParentHeight = ticketItemParentTop - ticketItemParentBot;
+
+                if (ticketCenter < ticketItemParentBot + ticketItemParentHeight * autoScrollTicketMoveThreshold)
+                {
+                    // ScrollRect columnItemScroll = _currDragTicketColumnOver.itemScroll;
+                    // if (columnItemScroll.horizontalNormalizedPosition < 1f)
+                    // {
+                    //     columnItemScroll.horizontalNormalizedPosition += autoScrollTicketMoveSpeed * Time.deltaTime;
+                    // }
+                } 
+                else if (ticketCenter > ticketItemParentTop - ticketItemParentHeight * autoScrollTicketMoveThreshold)
+                {
+                    // ScrollRect columnItemScroll = _currDragTicketColumnOver.itemScroll;
+                    // Debug.Log("MOVE TOP: " + columnItemScroll.horizontalNormalizedPosition);
+                    // if (columnItemScroll.horizontalNormalizedPosition < 1f)
+                    // {
+                    //     columnItemScroll.horizontalNormalizedPosition += autoScrollTicketMoveSpeed * Time.deltaTime;
+                    // }
+                }
+            }
+        }
+
         protected override void HideWindow(bool force)
         {
             ResetElements();
@@ -64,9 +131,9 @@ namespace RuKanban.App.Window
 
         public override void ResetElements()
         {
-            addColumnContainer.GetComponent<LayoutElement>().preferredWidth = COLUMN_WIDTH;
-            itemTemplate.GetComponent<LayoutElement>().preferredWidth = COLUMN_WIDTH;
-            itemPlaceholder.GetComponent<LayoutElement>().preferredWidth = COLUMN_WIDTH;
+            addColumnContainer.GetComponent<LayoutElement>().preferredWidth = columnWidth;
+            itemTemplate.GetComponent<LayoutElement>().preferredWidth = columnWidth;
+            itemPlaceholder.GetComponent<LayoutElement>().preferredWidth = columnWidth;
             
             header.ResetElements();
             addColumnButton.onClick.RemoveAllListeners();
@@ -298,11 +365,11 @@ namespace RuKanban.App.Window
                 _currDragTicketOldAnchorMax = dragTicketRT.anchorMax;
                 _currDragTicketOldParent = dragTicketRT.parent;
                 _currDragTicketOldSiblingIndex = dragTicketRT.GetSiblingIndex();
-                
+
                 dragTicketRT.SetParent(dragAndDropParent);
             }
         }
-
+        
         private void OnTicketItemDrag(ColumnItem previousColumnItem, TicketItem ticketItem)
         {
             if (_isCurrDragTicket)
@@ -317,7 +384,7 @@ namespace RuKanban.App.Window
                 RectTransformUtility.ScreenPointToLocalPointInRectangle(dragAndDropParent, Input.mousePosition,
                     null, out var dragTicketPoint);
                 dragTicketRT.anchoredPosition = dragTicketPoint;
-                
+
                 foreach (ColumnItem anotherColumnItem in currColumnItems)
                 {
                     var anotherColumnItemRT = anotherColumnItem.GetComponent<RectTransform>();

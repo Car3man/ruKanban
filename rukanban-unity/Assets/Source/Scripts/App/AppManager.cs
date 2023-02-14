@@ -51,6 +51,7 @@ namespace RuKanban.App
             isPortraitMode = false;
             #endif
 
+            Application.targetFrameRate = 60;
             Screen.orientation = isPortraitMode ? ScreenOrientation.Portrait : ScreenOrientation.LandscapeLeft;
             
             string windowsBaseResourcePath = isPortraitMode ? "Windows/Portrait" : "Windows/Landscape";

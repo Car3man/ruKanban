@@ -924,10 +924,16 @@ MonoBehaviour:
   currentPathText: {fileID: 1439417481129812434}
   addColumnButton: {fileID: 7536419954679221714}
   dragAndDropParent: {fileID: 6986517911805909125}
+  columnWidth: 720
   itemTemplate: {fileID: 4831363291371249220}
   itemParent: {fileID: 5296424447577862179}
+  itemScroll: {fileID: 446534833193273901}
   addColumnContainer: {fileID: 8489782561500896936}
   itemPlaceholder: {fileID: 7685800260063894226}
+  autoScrollColumnMoveThreshold: 0.1
+  autoScrollColumnMoveSpeed: 2
+  autoScrollTicketMoveThreshold: 0.25
+  autoScrollTicketMoveSpeed: 2
   currColumnItems: []
 --- !u!1 &3128203844658380636
 GameObject:
@@ -1198,6 +1204,7 @@ MonoBehaviour:
   editTitleText: {fileID: 3267895429086418808}
   deleteButton: {fileID: 8307219199870548006}
   addTicketButton: {fileID: 4370272334903786392}
+  itemScroll: {fileID: 2967621058958911566}
   itemTemplate: {fileID: 617476598158205993}
   itemParent: {fileID: 5770705761323903513}
   itemPlaceholder: {fileID: 3829862954331254323}
@@ -2278,7 +2285,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 360, y: -15}
-  m_SizeDelta: {x: 720, y: 1134.9999}
+  m_SizeDelta: {x: 720, y: 574.9999}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!222 &2574490090994402961
 CanvasRenderer:
@@ -3900,8 +3907,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 1092, y: -582.49994}
-  m_SizeDelta: {x: 720, y: 1134.9999}
+  m_AnchoredPosition: {x: 1092, y: -302.49994}
+  m_SizeDelta: {x: 720, y: 574.9999}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &8649870797887278682
 CanvasRenderer:

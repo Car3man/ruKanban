@@ -16,6 +16,7 @@ namespace RuKanban.App.Window
         public TMP_InputField editTitleText;
         public Button deleteButton;
         public Button addTicketButton;
+        public ScrollRect itemScroll;
         
         [SerializeField] private TicketItem itemTemplate;
         [SerializeField] private Transform itemParent;
