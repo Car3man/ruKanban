@@ -930,10 +930,10 @@ MonoBehaviour:
   itemScroll: {fileID: 446534833193273901}
   addColumnContainer: {fileID: 8489782561500896936}
   itemPlaceholder: {fileID: 7685800260063894226}
-  autoScrollColumnMoveThreshold: 0.1
-  autoScrollColumnMoveSpeed: 2
+  autoScrollColumnMoveThreshold: 0.25
+  autoScrollColumnMoveSpeed: 0.2
   autoScrollTicketMoveThreshold: 0.25
-  autoScrollTicketMoveSpeed: 2
+  autoScrollTicketMoveSpeed: 0.2
   currColumnItems: []
 --- !u!1 &3128203844658380636
 GameObject:

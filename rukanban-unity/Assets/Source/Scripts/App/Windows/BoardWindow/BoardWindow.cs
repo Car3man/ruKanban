@@ -84,43 +84,44 @@ namespace RuKanban.App.Window
                 }
             }
 
-            if (_isCurrDragTicket && _currDragTicketColumnOver != null)
-            {
-                var ticketItemRT = _currDragTicket.Item2.GetComponent<RectTransform>();
-                var ticketItemParentRT = _currDragTicket.Item1.TicketItemsParent.GetComponent<RectTransform>();
-
-                var ticketItemWorldCorners = new Vector3[4];
-                ticketItemRT.GetWorldCorners(ticketItemWorldCorners);
-            
-                var ticketItemParentWorldCorners = new Vector3[4];
-                ticketItemParentRT.GetWorldCorners(ticketItemParentWorldCorners);
-
-                float ticketTop = ticketItemWorldCorners[1].y;
-                float ticketBot = ticketItemWorldCorners[0].y;
-                float ticketCenter = (ticketTop + ticketBot) / 2f;
-
-                float ticketItemParentTop = ticketItemParentWorldCorners[1].y;
-                float ticketItemParentBot = ticketItemParentWorldCorners[0].y;
-                float ticketItemParentHeight = ticketItemParentTop - ticketItemParentBot;
-
-                if (ticketCenter < ticketItemParentBot + ticketItemParentHeight * autoScrollTicketMoveThreshold)
-                {
-                    // ScrollRect columnItemScroll = _currDragTicketColumnOver.itemScroll;
-                    // if (columnItemScroll.horizontalNormalizedPosition < 1f)
-                    // {
-                    //     columnItemScroll.horizontalNormalizedPosition += autoScrollTicketMoveSpeed * Time.deltaTime;
-                    // }
-                } 
-                else if (ticketCenter > ticketItemParentTop - ticketItemParentHeight * autoScrollTicketMoveThreshold)
-                {
-                    // ScrollRect columnItemScroll = _currDragTicketColumnOver.itemScroll;
-                    // Debug.Log("MOVE TOP: " + columnItemScroll.horizontalNormalizedPosition);
-                    // if (columnItemScroll.horizontalNormalizedPosition < 1f)
-                    // {
-                    //     columnItemScroll.horizontalNormalizedPosition += autoScrollTicketMoveSpeed * Time.deltaTime;
-                    // }
-                }
-            }
+            // TODO
+            // if (_isCurrDragTicket && _currDragTicketColumnOver != null)
+            // {
+            //     var ticketItemRT = _currDragTicket.Item2.GetComponent<RectTransform>();
+            //     var ticketItemParentRT = _currDragTicket.Item1.TicketItemsParent.GetComponent<RectTransform>();
+            //
+            //     var ticketItemWorldCorners = new Vector3[4];
+            //     ticketItemRT.GetWorldCorners(ticketItemWorldCorners);
+            //
+            //     var ticketItemParentWorldCorners = new Vector3[4];
+            //     ticketItemParentRT.GetWorldCorners(ticketItemParentWorldCorners);
+            //
+            //     float ticketTop = ticketItemWorldCorners[1].y;
+            //     float ticketBot = ticketItemWorldCorners[0].y;
+            //     float ticketCenter = (ticketTop + ticketBot) / 2f;
+            //
+            //     float ticketItemParentTop = ticketItemParentWorldCorners[1].y;
+            //     float ticketItemParentBot = ticketItemParentWorldCorners[0].y;
+            //     float ticketItemParentHeight = ticketItemParentTop - ticketItemParentBot;
+            //
+            //     if (ticketCenter < ticketItemParentBot + ticketItemParentHeight * autoScrollTicketMoveThreshold)
+            //     {
+            //         // ScrollRect columnItemScroll = _currDragTicketColumnOver.itemScroll;
+            //         // if (columnItemScroll.horizontalNormalizedPosition < 1f)
+            //         // {
+            //         //     columnItemScroll.horizontalNormalizedPosition += autoScrollTicketMoveSpeed * Time.deltaTime;
+            //         // }
+            //     } 
+            //     else if (ticketCenter > ticketItemParentTop - ticketItemParentHeight * autoScrollTicketMoveThreshold)
+            //     {
+            //         // ScrollRect columnItemScroll = _currDragTicketColumnOver.itemScroll;
+            //         // Debug.Log("MOVE TOP: " + columnItemScroll.horizontalNormalizedPosition);
+            //         // if (columnItemScroll.horizontalNormalizedPosition < 1f)
+            //         // {
+            //         //     columnItemScroll.horizontalNormalizedPosition += autoScrollTicketMoveSpeed * Time.deltaTime;
+            //         // }
+            //     }
+            // }
         }
 
         protected override void HideWindow(bool force)

@@ -172,8 +172,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 340, y: -61}
-  m_SizeDelta: {x: 658, y: 119.3}
+  m_AnchoredPosition: {x: 120, y: -0}
+  m_SizeDelta: {x: 240, y: 120.54}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &3081330340924315862
 MonoBehaviour:
@@ -1320,7 +1320,7 @@ MonoBehaviour:
   addTicketButton: {fileID: 4370272334903786392}
   itemScroll: {fileID: 3316061429462924549}
   itemTemplate: {fileID: 617476598158205993}
-  itemParent: {fileID: 5374002152864233441}
+  itemParent: {fileID: 3889930606966242105}
   itemPlaceholder: {fileID: 3829862954331254323}
   currTicketItems: []
 --- !u!1 &3364859413454055190
@@ -2400,7 +2400,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 140, y: -15}
-  m_SizeDelta: {x: 250, y: 624.9999}
+  m_SizeDelta: {x: 250, y: 325.99988}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!222 &2574490090994402961
 CanvasRenderer:
@@ -3792,8 +3792,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 402, y: -327.49994}
-  m_SizeDelta: {x: 250, y: 624.9999}
+  m_AnchoredPosition: {x: 402, y: -177.99994}
+  m_SizeDelta: {x: 250, y: 325.99988}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &8649870797887278682
 CanvasRenderer:
@@ -3866,7 +3866,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 109, y: 0.72999954}
+  m_AnchoredPosition: {x: 120, y: -60.269997}
   m_SizeDelta: {x: 240, y: 120.54}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &4425478036174700123
